@@ -2636,14 +2636,14 @@ def log_cache_rate(fn):
         global hits
 
         requests += 1
-        print('req', requests)
         result = fn(self)
-        print('res', result)
         if result:
             hits += 1
-            print('hits', hits)
+        ratio = (float(hits) / float(requests)) * 100.0
 
-        print 'Cache hit ratio: %d%%' % (hits / requests)
+        print 'Cache hits: %d' % (hits)
+        print 'Cache requests: %d' % (requests)
+        print 'Cache hit ratio: %d%%' % (ratio)
         return result
 
     return wrapper
