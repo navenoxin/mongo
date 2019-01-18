@@ -3864,3 +3864,18 @@ env.Alias('cache-prune', cachePrune)
 # because SCons wants it to be a particular object.
 for i, s in enumerate(BUILD_TARGETS):
     BUILD_TARGETS[i] = env.subst(s)
+
+def print_cache_stats():
+    from SCons.Node.FS import cache_hits 
+    from SCons.Node.FS import cache_requests
+    if cache_requests == 0:
+        print('No cache requests were made.')
+        return
+
+    ratio = (float(cache_hits) / float(cache_requests)) * 100.0
+    print('Cache cache_hits: %d', cache_hits)
+    print('Cache cache_requests: %d', cache_requests)
+    print('Cache hit ratio: %d%%', ratio)
+
+import atexit
+atexit.register(print_cache_stats)

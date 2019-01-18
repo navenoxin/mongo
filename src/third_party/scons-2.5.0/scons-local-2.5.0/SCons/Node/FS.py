@@ -2622,28 +2622,24 @@ class FileBuildInfo(SCons.Node.BuildInfoBase):
         return '\n'.join(result)
 
 
+cache_hits = 0
+cache_requests = 0
+
+
 def log_cache_rate(fn):
     """
     Logs the cache hit ratio.
     """
-    global requests
-    global hits
-    hits = 0
-    requests = 0
 
     def wrapper(self):
-        global requests
-        global hits
+        global cache_requests
+        global cache_hits
 
-        requests += 1
+        cache_requests += 1
         result = fn(self)
         if result:
-            hits += 1
-        ratio = (float(hits) / float(requests)) * 100.0
+            cache_hits += 1
 
-        print 'Cache hits: %d' % (hits)
-        print 'Cache requests: %d' % (requests)
-        print 'Cache hit ratio: %d%%' % (ratio)
         return result
 
     return wrapper
@@ -3009,6 +3005,7 @@ class File(Base):
             return None
         if not self.is_derived():
             return None
+        print 'Should have requested...'
         return self.get_build_env().get_CacheDir().retrieve(self)
 
     def visited(self):
