@@ -327,30 +327,6 @@ TEST(MatchExpressionParserTest, WhereParsesSuccessfullyWhenAllowed) {
                   .getStatus());
 }
 
-TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsInline) {
-    auto query = fromjson("{a: '/MyReGeX/i'}");
-    boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
-    ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
-}
-
-TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsInlineAndEmptyObj) {
-    auto query = fromjson("{a: {$regex: '/MyReGeX/i', $options: ''}}");
-    boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
-    ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
-}
-
-TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsNotInline) {
-    auto query = fromjson("{a: {$regex: '/MyReGeX/', $options: 'i'}}");
-    boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
-    ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
-}
-
-TEST(MatchExpressionParserTest, RegexDoesNotParseSuccessfullyWithMultipleOptions) {
-    auto query = fromjson("{a: {$options: 's', $regex: '/aSdF/i'}}");
-    boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
-    ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
-}
-
 TEST(MatchExpressionParserTest, NearSphereFailsToParseWhenDisallowed) {
     auto query = fromjson("{a: {$nearSphere: {$geometry: {type: 'Point', coordinates: [0, 0]}}}}");
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
