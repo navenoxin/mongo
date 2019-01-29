@@ -549,7 +549,7 @@ StatusWithMatchExpression parseRegexDocument(StringData name, const BSONObj& doc
                     regex = e.valueStringData();
                 } else if (e.type() == BSONType::RegEx) {
                     regex = e.regex();
-                    if (!regexOptions.empty() && strlen(e.regexFlags()))
+                    if (!regexOptions.empty() && strlen(e.regexFlags()) > 0)
                         return {Status(ErrorCodes::BadValue,
                                        "options set in both $regex and $options")};
                     regexOptions = e.regexFlags();

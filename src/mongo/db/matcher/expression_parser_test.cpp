@@ -328,43 +328,27 @@ TEST(MatchExpressionParserTest, WhereParsesSuccessfullyWhenAllowed) {
 }
 
 TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsInline) {
-    auto query = fromjson("{$regex: '/MyReGeX/i'}");
+    auto query = fromjson("{a: {$regex: /MyReGeX/i}}");
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
-    ASSERT_OK(MatchExpressionParser::parse(query,
-                                           expCtx,
-                                           ExtensionsCallbackNoop(),
-                                           MatchExpressionParser::AllowedFeatures::kJavascript)
-                  .getStatus());
+    ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
 TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsInlineAndEmptyObj) {
-    auto query = fromjson("{$regex: '/MyReGeX/i', $options: ''}");
+    auto query = fromjson("{a: {$regex: /MyReGeX/i, $options: ''}}");
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
-    ASSERT_OK(MatchExpressionParser::parse(query,
-                                           expCtx,
-                                           ExtensionsCallbackNoop(),
-                                           MatchExpressionParser::AllowedFeatures::kJavascript)
-                  .getStatus());
+    ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
 TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsNotInline) {
-    auto query = fromjson("{$regex: '/MyReGeX/', $options: 'i'}");
+    auto query = fromjson("{a: {$regex: /MyReGeX/, $options: 'i'}}");
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
-    ASSERT_OK(MatchExpressionParser::parse(query,
-                                           expCtx,
-                                           ExtensionsCallbackNoop(),
-                                           MatchExpressionParser::AllowedFeatures::kJavascript)
-                  .getStatus());
+    ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
 TEST(MatchExpressionParserTest, RegexDoesNotParseSuccessfullyWithMultipleOptions) {
-    auto query = fromjson("{$regex: '/MyReGeX/i', $options: 'i'}");
+    auto query = fromjson("{a: {$regex: /MyReGeX/i, $options: 'i'}}");
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
-    ASSERT_NOT_OK(MatchExpressionParser::parse(query,
-                                               expCtx,
-                                               ExtensionsCallbackNoop(),
-                                               MatchExpressionParser::AllowedFeatures::kJavascript)
-                      .getStatus());
+    ASSERT_NOT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
 TEST(MatchExpressionParserTest, NearSphereFailsToParseWhenDisallowed) {
