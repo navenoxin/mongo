@@ -549,6 +549,8 @@ StatusWithMatchExpression parseRegexDocument(StringData name, const BSONObj& doc
                     regex = e.valueStringData();
                 } else if (e.type() == BSONType::RegEx) {
                     regex = e.regex();
+                    if (!regexOptions.empty() && strlen(e.regexFlags()))
+                        return {Status(ErrorCodes::BadValue, "options set in both $regex and $options")};
                     regexOptions = e.regexFlags();
                 } else {
                     return {Status(ErrorCodes::BadValue, "$regex has to be a string")};
@@ -558,6 +560,8 @@ StatusWithMatchExpression parseRegexDocument(StringData name, const BSONObj& doc
             case PathAcceptingKeyword::OPTIONS:
                 if (e.type() != BSONType::String)
                     return {Status(ErrorCodes::BadValue, "$options has to be a string")};
+                if (!regexOptions.empty() && !e.valueStringData().empty())
+                    return {Status(ErrorCodes::BadValue, "options set in both $regex and $options")};
                 regexOptions = e.valueStringData();
                 break;
             default:
