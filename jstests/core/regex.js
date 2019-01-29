@@ -61,4 +61,29 @@
     assert.throws(function() {
         t.find({key: {$regex: 'abcd\0xyz'}}).explain();
     });
+
+    //
+    // Confirm $options and mode specified in $regex are not allowed to be specified together.
+    //
+    t.drop();
+    assert.writeOK(t.insert({x: ["abc"]}));
+
+    assert.throws(function() {
+        t.find({x: {$regex: /ab/i, $options: 's'}}).itcount();
+    });
+    assert.throws(function() {
+        t.find({x: {$options: 's', $regex: /ab/i}}).itcount();
+    });
+
+    //
+    // Confirm $options and $regex options used correctly when other is empty or unspecified
+    //
+    t.drop();
+    assert.writeOK(t.save({x: ["abc"]}));
+
+    assert.eq(1, t.count({x: {$regex: /aBc/i, $options: ''}}), "I");
+    assert.eq(1, t.count({x: {$options: '', $regex: /ABC/i}}));
+
+    assert.eq(1, t.count({x: {$regex: /ABC/, $options: 'i'}}));
+    assert.eq(1, t.count({x: {$options: 'i', $regex: /ABC/}}));
 })();
