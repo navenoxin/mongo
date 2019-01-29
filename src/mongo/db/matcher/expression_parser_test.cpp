@@ -327,6 +327,46 @@ TEST(MatchExpressionParserTest, WhereParsesSuccessfullyWhenAllowed) {
                   .getStatus());
 }
 
+TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsInline) {
+    auto query = fromjson("{$regex: '/MyReGeX/i'}");
+    boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
+    ASSERT_OK(MatchExpressionParser::parse(query,
+                                           expCtx,
+                                           ExtensionsCallbackNoop(),
+                                           MatchExpressionParser::AllowedFeatures::kJavascript)
+                  .getStatus());
+}
+
+TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsInlineAndEmptyObj) {
+    auto query = fromjson("{$regex: '/MyReGeX/i', $options: ''}");
+    boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
+    ASSERT_OK(MatchExpressionParser::parse(query,
+                                           expCtx,
+                                           ExtensionsCallbackNoop(),
+                                           MatchExpressionParser::AllowedFeatures::kJavascript)
+                  .getStatus());
+}
+
+TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsNotInline) {
+    auto query = fromjson("{$regex: '/MyReGeX/', $options: 'i'}");
+    boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
+    ASSERT_OK(MatchExpressionParser::parse(query,
+                                           expCtx,
+                                           ExtensionsCallbackNoop(),
+                                           MatchExpressionParser::AllowedFeatures::kJavascript)
+                  .getStatus());
+}
+
+TEST(MatchExpressionParserTest, RegexDoesNotParseSuccessfullyWithMultipleOptions) {
+    auto query = fromjson("{$regex: '/MyReGeX/i', $options: 'i'}");
+    boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
+    ASSERT_NOT_OK(MatchExpressionParser::parse(query,
+                                               expCtx,
+                                               ExtensionsCallbackNoop(),
+                                               MatchExpressionParser::AllowedFeatures::kJavascript)
+                      .getStatus());
+}
+
 TEST(MatchExpressionParserTest, NearSphereFailsToParseWhenDisallowed) {
     auto query = fromjson("{a: {$nearSphere: {$geometry: {type: 'Point', coordinates: [0, 0]}}}}");
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
