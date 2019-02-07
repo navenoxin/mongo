@@ -340,37 +340,49 @@ TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsInline) {
 }
 
 TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithoutOptionsInlineAndEmptyObj) {
-    auto query = BSON("a" << BSON("$regex" << BSONRegEx("/myRegex/", "") << "$options" << ""));
+    auto query = BSON("a" << BSON("$regex" << BSONRegEx("/myRegex/", "") << "$options"
+                                           << ""));
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
     ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
 TEST(MatchExpressionParserTest, RegexDoesNotParseSuccessfullyWithOptionsInlineAndEmptyObj) {
-    auto query = BSON("a" << BSON("$regex" << BSONRegEx("/myRegex/", "i") << "$options" << ""));
+    auto query = BSON("a" << BSON("$regex" << BSONRegEx("/myRegex/", "i") << "$options"
+                                           << ""));
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
     ASSERT_NOT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
 TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsNotInline) {
-    auto query = BSON("a" << BSON("$regex" << BSONRegEx("/myRegex/", "") << "$options" << "i"));
+    auto query = BSON("a" << BSON("$regex" << BSONRegEx("/myRegex/", "") << "$options"
+                                           << "i"));
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
     ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
 TEST(MatchExpressionParserTest, RegexDoesNotParseSuccessfullyWithMultipleOptions) {
-    auto query = BSON("a" << BSON("$options" << "s" << "$regex" << BSONRegEx("/myRegex/", "i")));
+    auto query = BSON("a" << BSON("$options"
+                                  << "s"
+                                  << "$regex"
+                                  << BSONRegEx("/myRegex/", "i")));
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
     ASSERT_NOT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
 TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsFirst) {
-    auto query = BSON("a" << BSON("$options" << "s" << "$regex" << BSONRegEx("/myRegex/", "")));
+    auto query = BSON("a" << BSON("$options"
+                                  << "s"
+                                  << "$regex"
+                                  << BSONRegEx("/myRegex/", "")));
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
     ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
 TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsFirstEmptyOptions) {
-    auto query = BSON("a" << BSON("$options" << "" << "$regex" << BSONRegEx("/myRegex/", "")));
+    auto query = BSON("a" << BSON("$options"
+                                  << ""
+                                  << "$regex"
+                                  << BSONRegEx("/myRegex/", "")));
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
     ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
