@@ -339,14 +339,14 @@ TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithOptionsInline) {
     ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
-TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithoutOptionsInlineAndEmptyObj) {
+TEST(MatchExpressionParserTest, RegexParsesSuccessfullyWithoutOptionsInlineAndEmptyOptionsStr) {
     auto query = BSON("a" << BSON("$regex" << BSONRegEx("/myRegex/", "") << "$options"
                                            << ""));
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
     ASSERT_OK(MatchExpressionParser::parse(query, expCtx).getStatus());
 }
 
-TEST(MatchExpressionParserTest, RegexDoesNotParseSuccessfullyWithOptionsInlineAndEmptyObj) {
+TEST(MatchExpressionParserTest, RegexDoesNotParseSuccessfullyWithOptionsInlineAndEmptyOptionsStr) {
     auto query = BSON("a" << BSON("$regex" << BSONRegEx("/myRegex/", "i") << "$options"
                                            << ""));
     boost::intrusive_ptr<ExpressionContextForTest> expCtx(new ExpressionContextForTest());
