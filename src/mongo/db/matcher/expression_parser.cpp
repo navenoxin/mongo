@@ -551,7 +551,7 @@ StatusWithMatchExpression parseRegexDocument(StringData name, const BSONObj& doc
                     regex = e.regex();
                     if (!StringData{e.regexFlags()}.empty()) {
                         if (!regexOptions.empty()) {
-                            return {Status(ErrorCodes::Error(51058),
+                            return {Status(ErrorCodes::Error(51072),
                                            "options set in both $regex and $options")};
                         }
                         regexOptions = e.regexFlags();
@@ -567,7 +567,7 @@ StatusWithMatchExpression parseRegexDocument(StringData name, const BSONObj& doc
                 }
 
                 if (!regexOptions.empty()) {
-                    return {Status(ErrorCodes::Error(51059),
+                    return {Status(ErrorCodes::Error(51073),
                                    "options set in both $regex and $options")};
                 }
 

@@ -69,10 +69,10 @@
     assert.commandWorked(t.insert({x: ["abc"]}));
 
     let regexFirst = assert.throws(() => t.find({x: {$regex: /ab/i, $options: 's'}}).itcount());
-    assert.commandFailedWithCode(regexFirst, 51059);
+    assert.commandFailedWithCode(regexFirst, 51073);
 
     let optsFirst = assert.throws(() => t.find({x: {$options: 's', $regex: /ab/i}}).itcount());
-    assert.commandFailedWithCode(optsFirst, 51058);
+    assert.commandFailedWithCode(optsFirst, 51072);
 
     t.drop();
     assert.commandWorked(t.save({x: ["abc"]}));
