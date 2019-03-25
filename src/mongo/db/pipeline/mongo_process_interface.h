@@ -256,6 +256,19 @@ public:
         OperationContext* opCtx, const NamespaceString&) const = 0;
 
     /**
+     * Returns zero or one documents with _id 'documentId'. Always performs the lookup locally
+     * rather than contacting any other nodes in the cluster. May return documents not logically
+     * owned by this shard -- does not perform shard filtering. 'documentId' is treated as a unique
+     * identifier of a document, and is of type BSONElement. The collection represented by `nss`
+     * must have an indexed _id field, and throws if the _id field is not indexed. Returns
+     * boost::none if no matching documents were found, including cases where the given namespace
+     * does not exist.
+     */
+    virtual boost::optional<Document> getById(OperationContext* opCtx,
+                                              const NamespaceString& nss,
+                                              const BSONElement documentId) = 0;
+
+    /**
      * Returns zero or one documents with the document key 'documentKey'. 'documentKey' is treated
      * as a unique identifier of a document, and may include an _id or all fields from the shard key
      * and an _id. Throws if more than one match was found. Returns boost::none if no matching

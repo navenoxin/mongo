@@ -99,6 +99,9 @@ public:
         OperationContext* opCtx, const NamespaceString&, UUID) const override;
     std::vector<FieldPath> collectDocumentKeyFieldsActingAsRouter(
         OperationContext* opCtx, const NamespaceString&) const override;
+    boost::optional<Document> getById(OperationContext* opCtx,
+                                      const NamespaceString& nss,
+                                      const BSONElement documentId) final;
     boost::optional<Document> lookupSingleDocument(
         const boost::intrusive_ptr<ExpressionContext>& expCtx,
         const NamespaceString& nss,

@@ -309,6 +309,7 @@ env.Library(
         'process_interface_standalone.cpp',
     ],
     LIBDEPS=[
+        '$BUILD_DIR/mongo/db/dbhelpers',
         '$BUILD_DIR/mongo/db/ops/write_ops_exec',
         '$BUILD_DIR/mongo/db/query_exec',
         '$BUILD_DIR/mongo/db/repl/speculative_majority_read_info',

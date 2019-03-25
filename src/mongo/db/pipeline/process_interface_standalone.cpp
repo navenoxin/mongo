@@ -43,6 +43,7 @@
 #include "mongo/db/curop.h"
 #include "mongo/db/cursor_manager.h"
 #include "mongo/db/db_raii.h"
+#include "mongo/db/dbhelpers.h"
 #include "mongo/db/index/index_descriptor.h"
 #include "mongo/db/pipeline/document_source_cursor.h"
 #include "mongo/db/pipeline/lite_parsed_pipeline.h"
@@ -416,6 +417,23 @@ std::vector<FieldPath> MongoInterfaceStandalone::collectDocumentKeyFieldsActingA
 std::vector<GenericCursor> MongoInterfaceStandalone::getIdleCursors(
     const intrusive_ptr<ExpressionContext>& expCtx, CurrentOpUserMode userMode) const {
     return CursorManager::get(expCtx->opCtx)->getIdleCursors(expCtx->opCtx, userMode);
+}
+
+boost::optional<Document> MongoInterfaceStandalone::getById(OperationContext* opCtx,
+                                                            const NamespaceString& nss,
+                                                            const BSONElement docId) {
+    BSONObj result;
+    bool nsFound = false, indexFound = false;
+
+    AutoGetCollectionForRead autoColl(opCtx, nss);
+    Helpers::findById(
+        opCtx, autoColl.getDb(), nss.ns(), BSON("_id" << docId), result, &nsFound, &indexFound);
+
+    uassert(51144, str::stream() << "no index on field _id for " << nss.ns(), indexFound);
+    if (!nsFound) {
+        return boost::none;
+    }
+    return boost::optional<Document>(result);
 }
 
 boost::optional<Document> MongoInterfaceStandalone::lookupSingleDocument(

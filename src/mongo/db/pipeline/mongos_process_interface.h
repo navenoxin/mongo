@@ -78,6 +78,12 @@ public:
 
     void setOperationContext(OperationContext* opCtx) final {}
 
+    boost::optional<Document> getById(OperationContext* opCtx,
+                                      const NamespaceString& nss,
+                                      const BSONElement documentId) final {
+        MONGO_UNREACHABLE;
+    }
+
     boost::optional<Document> lookupSingleDocument(
         const boost::intrusive_ptr<ExpressionContext>& expCtx,
         const NamespaceString& nss,
