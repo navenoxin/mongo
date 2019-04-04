@@ -543,11 +543,18 @@ TEST_F(ChangeStreamStageTest, TransformInsertFromMigrate) {
     auto insert = makeOplogEntry(OpTypeEnum::kInsert,           // op type
                                  nss,                           // namespace
                                  BSON("_id" << 1 << "x" << 1),  // o
-                                 boost::none,                   // uuid
+                                 testUuid(),                   // uuid
                                  fromMigrate,                   // fromMigrate
                                  boost::none);                  // o2
-
-    checkTransformation(insert, boost::none);
+    Document expectedInsert{
+        {DSChangeStream::kIdField, makeResumeToken(kDefaultTs, testUuid(), BSON("_id" << 1))},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kInsertOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+        {DSChangeStream::kFullDocumentField, D{{"_id", 1}, {"x", 2}}},
+        {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
+        {DSChangeStream::kDocumentKeyField, D{{"_id", 1}}},
+    };
+    checkTransformation(insert, expectedInsert, {{"_id"}});
 }
 
 TEST_F(ChangeStreamStageTest, TransformUpdateFields) {
