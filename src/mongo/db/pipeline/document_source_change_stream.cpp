@@ -268,12 +268,16 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
     // 3) Look for 'applyOps' which were created as part of a transaction.
     BSONObj applyOps = getTxnApplyOpsFilter(nsMatch["ns"], nss);
 
-    // Match oplog entries after "start" and are either supported (1) commands or (2) operations,
-    // excepting those tagged "fromMigrate". Include the resume token, if resuming, so we can verify
-    // it was still present in the oplog.
+    // Allow chunk migration entries when on mongod. TODO probably move this to (2).
+    auto notFromMigrate = BSON("fromMigrate" << NE << true);
+    auto runningOnShard = BSON(!expCtx->inMongos);
+
+    // Match oplog entries after "start" and are either supported (1) commands or (2) operations.
+    // Include those tagged "fromMigrate" when not run on mongos. Include the resume token, if
+    // resuming, so we can verify it was still present in the oplog.
     return BSON("$and" << BSON_ARRAY(BSON("ts" << (startFromInclusive ? GTE : GT) << startFrom)
-                                     << BSON(OR(opMatch, commandMatch, applyOps));
-                                    //  << BSON("fromMigrate" << NE << true)));
+                                     << BSON(OR(opMatch, commandMatch, applyOps))
+                                     << BSON(OR(notFromMigrate, runningOnShard));
 }
 
 namespace {
