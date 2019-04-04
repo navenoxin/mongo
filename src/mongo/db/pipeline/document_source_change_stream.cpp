@@ -272,8 +272,8 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
     // excepting those tagged "fromMigrate". Include the resume token, if resuming, so we can verify
     // it was still present in the oplog.
     return BSON("$and" << BSON_ARRAY(BSON("ts" << (startFromInclusive ? GTE : GT) << startFrom)
-                                     << BSON(OR(opMatch, commandMatch, applyOps))
-                                     << BSON("fromMigrate" << NE << true)));
+                                     << BSON(OR(opMatch, commandMatch, applyOps));
+                                    //  << BSON("fromMigrate" << NE << true)));
 }
 
 namespace {
