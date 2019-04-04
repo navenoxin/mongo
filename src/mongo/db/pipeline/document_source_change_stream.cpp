@@ -269,15 +269,16 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
     BSONObj applyOps = getTxnApplyOpsFilter(nsMatch["ns"], nss);
 
     // Allow chunk migration entries when on mongod. TODO probably move this to (2).
-    auto notFromMigrate = BSON("fromMigrate" << NE << true);
-    auto runningOnShard = BSON(!expCtx->inMongos);
+    auto includeMigrations = expCtx->inMongos ? BSON("fromMigrate" << NE << true) : BSONObj();
+    // auto notFromMigrate = BSON(OR(;
+    // auto runningOnShard = !expCtx->inMongos ? BSON(ALWAYS_TRUE) : ;
 
     // Match oplog entries after "start" and are either supported (1) commands or (2) operations.
     // Include those tagged "fromMigrate" when not run on mongos. Include the resume token, if
     // resuming, so we can verify it was still present in the oplog.
     return BSON("$and" << BSON_ARRAY(BSON("ts" << (startFromInclusive ? GTE : GT) << startFrom)
                                      << BSON(OR(opMatch, commandMatch, applyOps))
-                                     << BSON(OR(notFromMigrate, runningOnShard));
+                                     << includeMigrations));
 }
 
 namespace {
