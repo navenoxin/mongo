@@ -264,22 +264,36 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
 
     // 2) Supported operations on the target namespace.
     BSONObj nsMatch = BSON("ns" << BSONRegEx(getNsRegexForChangeStream(nss)));
-    auto opMatch = BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch));
+    
+    // Allow chunk migration entries when on mongod. Only enable when $searchBeta enabled?
+    bool excludeMigrationCrud = expCtx->inMongos;
+    
+    BSONArrayBuilder opMatchConditions;
+    opMatchConditions.append(BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch)));
+    if (excludeMigrationCrud) {
+        opMatchConditions.append(BSON("fromMigrate" << NE << true));
+    }
+    // auto opMatch = BSON(nsMatch["ns"] << BSON("$and" << opMatchConditions.arr()));
+    // auto opMatch = BSON("$and" << BSON_ARRAY(BSON(nsMatch["ns"] << BSON("$and" << opMatchConditions.arr()))));
+    auto opMatch = BSON("$and" << opMatchConditions.arr());
+
+    // old
+    // auto opMatch = BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch));
 
     // 3) Look for 'applyOps' which were created as part of a transaction.
     BSONObj applyOps = getTxnApplyOpsFilter(nsMatch["ns"], nss);
 
-    // Allow chunk migration entries when on mongod. TODO probably move this to (2).
-    auto includeMigrations = expCtx->inMongos ? BSON("fromMigrate" << NE << true) : BSONObj();
     // auto notFromMigrate = BSON(OR(;
     // auto runningOnShard = !expCtx->inMongos ? BSON(ALWAYS_TRUE) : ;
 
     // Match oplog entries after "start" and are either supported (1) commands or (2) operations.
     // Include those tagged "fromMigrate" when not run on mongos. Include the resume token, if
     // resuming, so we can verify it was still present in the oplog.
+
+    // BSONObj afterStart = BSON("ts" << (startFromInclusive ? GTE : GT) << startFrom);
+    // BSONObj supportedCommands = BSON(OR(opMatch, commandMatch, applyOps));
     return BSON("$and" << BSON_ARRAY(BSON("ts" << (startFromInclusive ? GTE : GT) << startFrom)
-                                     << BSON(OR(opMatch, commandMatch, applyOps))
-                                     << includeMigrations));
+                                     << BSON(OR(opMatch, commandMatch, applyOps))));
 }
 
 namespace {
