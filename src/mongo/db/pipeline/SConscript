@@ -240,6 +240,7 @@ env.CppUnitTest(
         'document_source_test.cpp',
         'document_source_unwind_test.cpp',
         'sequential_document_cache_test.cpp',
+        'stub_mongo_process_interface_lookup_single_document.cpp',
     ],
     LIBDEPS=[
         '$BUILD_DIR/mongo/db/auth/authmocks',
