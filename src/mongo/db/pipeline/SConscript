@@ -240,7 +240,6 @@ env.CppUnitTest(
         'document_source_test.cpp',
         'document_source_unwind_test.cpp',
         'sequential_document_cache_test.cpp',
-        'stub_mongo_process_interface_lookup_single_document.cpp',
     ],
     LIBDEPS=[
         '$BUILD_DIR/mongo/db/auth/authmocks',
@@ -254,6 +253,7 @@ env.CppUnitTest(
         'document_source_mock',
         'document_value_test_util',
         'pipeline',
+        'stub_mongo_process_interface_lookup_single_document',
     ],
 )
 
@@ -288,6 +288,18 @@ env.Library(
     ],
     LIBDEPS=[
         '$BUILD_DIR/mongo/base',
+    ]
+)
+
+env.Library(
+    target='stub_mongo_process_interface_lookup_single_document',
+    source=[
+        'stub_mongo_process_interface_lookup_single_document.cpp',
+    ],
+    LIBDEPS=[
+        '$BUILD_DIR/mongo/base',
+        'document_source_mock',
+        'pipeline',
     ]
 )
 
