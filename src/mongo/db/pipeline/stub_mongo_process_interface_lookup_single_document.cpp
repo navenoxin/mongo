@@ -85,7 +85,7 @@ boost::optional<Document> StubMongoProcessInterfaceLookupSingleDocument::lookupS
     auto lookedUpDocument = pipeline->getNext();
     if (auto next = pipeline->getNext()) {
         uasserted(ErrorCodes::TooManyMatchingDocuments,
-                    str::stream() << "found more than one document matching "
+                  str::stream() << "found more than one document matching "
                                 << documentKey.toString()
                                 << " ["
                                 << lookedUpDocument->toString()
@@ -96,4 +96,4 @@ boost::optional<Document> StubMongoProcessInterfaceLookupSingleDocument::lookupS
     return lookedUpDocument;
 }
 
-} //  namespace mongo
+}  //  namespace mongo
