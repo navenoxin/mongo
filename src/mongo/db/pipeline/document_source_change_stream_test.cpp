@@ -554,7 +554,7 @@ TEST_F(ChangeStreamStageTest, TransformInsertFromMigrate) {
         {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
         {DSChangeStream::kDocumentKeyField, D{{"_id", 1}}},
     };
-    checkTransformation(insert, expectedInsert, {{"_id"}});
+    checkTransformation(insert, expectedInsert);
 }
 
 TEST_F(ChangeStreamStageTest, TransformUpdateFields) {
