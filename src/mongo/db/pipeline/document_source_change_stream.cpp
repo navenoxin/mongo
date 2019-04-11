@@ -265,16 +265,22 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
     BSONObj nsMatch = BSON("ns" << BSONRegEx(getNsRegexForChangeStream(nss)));
     
     // Allow chunk migration entries when on mongod. Only enable when $searchBeta enabled?
-    bool excludeMigrationCrud = expCtx->inMongos;
     
-    BSONArrayBuilder opMatchConditions;
-    opMatchConditions.append(BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch)));
-    if (excludeMigrationCrud) {
-        opMatchConditions.append(BSON("fromMigrate" << NE << true));
-    }
+    // BSONArrayBuilder opMatchConditions;
+    // opMatchConditions.append(BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch)));
+    // if (excludeMigrationCrud) {
+    //     opMatchConditions.append(BSON("fromMigrate" << NE << true));
+    // }
+
+    bool excludeMigrationCrud = expCtx->inMongos;
+    BSONObj opMatch = excludeMigrationCrud
+        ? BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch))
+        : BSON("$and" << BSON_ARRAY(BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch)) << BSON("fromMigrate" << NE << true)));
+
+    // auto withoutMigrations = opMatchConditions.append(BSON("fromMigrate" << NE << true));
     // auto opMatch = BSON(nsMatch["ns"] << BSON("$and" << opMatchConditions.arr()));
     // auto opMatch = BSON("$and" << BSON_ARRAY(BSON(nsMatch["ns"] << BSON("$and" << opMatchConditions.arr()))));
-    auto opMatch = BSON("$and" << opMatchConditions.arr());
+    // auto opMatch = BSON("$and" << opMatchConditions.arr());
 
     // old
     // auto opMatch = BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch));
