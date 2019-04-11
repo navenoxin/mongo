@@ -68,4 +68,4 @@ public:
 private:
     std::deque<DocumentSource::GetNextResult> _mockResults;
 };
-}  //  namespace mongo
+}  // namespace mongo

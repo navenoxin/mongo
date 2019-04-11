@@ -96,4 +96,4 @@ boost::optional<Document> StubMongoProcessInterfaceLookupSingleDocument::lookupS
     return lookedUpDocument;
 }
 
-}  //  namespace mongo
+}  // namespace mongo
