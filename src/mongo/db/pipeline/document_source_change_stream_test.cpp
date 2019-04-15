@@ -542,19 +542,20 @@ TEST_F(ChangeStreamStageTest, TransformInsertFromMigrate) {
     bool fromMigrate = true;
     auto insert = makeOplogEntry(OpTypeEnum::kInsert,           // op type
                                  nss,                           // namespace
-                                 BSON("_id" << 1 << "x" << 1),  // o
-                                 testUuid(),                   // uuid
+                                 BSON("x" << 2 << "_id" << 1),  // o
+                                 testUuid(),                    // uuid
                                  fromMigrate,                   // fromMigrate
                                  boost::none);                  // o2
     Document expectedInsert{
-        {DSChangeStream::kIdField, makeResumeToken(kDefaultTs, testUuid(), BSON("_id" << 1))},
+        {DSChangeStream::kIdField,
+         makeResumeToken(kDefaultTs, testUuid(), BSON("_id" << 1 << "x" << 2))},
         {DSChangeStream::kOperationTypeField, DSChangeStream::kInsertOpType},
         {DSChangeStream::kClusterTimeField, kDefaultTs},
-        {DSChangeStream::kFullDocumentField, D{{"_id", 1}, {"x", 2}}},
+        {DSChangeStream::kFullDocumentField, D{{"x", 2}, {"_id", 1}}},
         {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
-        {DSChangeStream::kDocumentKeyField, D{{"_id", 1}}},
+        {DSChangeStream::kDocumentKeyField, D{{"_id", 1}, {"x", 2}}},  // _id first
     };
-    checkTransformation(insert, expectedInsert);
+    checkTransformation(insert, expectedInsert, {{"_id"}, {"x"}});
 }
 
 TEST_F(ChangeStreamStageTest, TransformUpdateFields) {
@@ -684,18 +685,47 @@ TEST_F(ChangeStreamStageTest, TransformDelete) {
 
 TEST_F(ChangeStreamStageTest, TransformDeleteFromMigrate) {
     bool fromMigrate = true;
+    BSONObj o = BSON("_id" << 1);
     auto deleteEntry = makeOplogEntry(OpTypeEnum::kDelete,  // op type
                                       nss,                  // namespace
-                                      BSON("_id" << 1),     // o
-                                      boost::none,          // uuid
+                                      o,                    // o
+                                      testUuid(),           // uuid
                                       fromMigrate,          // fromMigrate
                                       boost::none);         // o2
-
-    checkTransformation(deleteEntry, boost::none);
+    Document expectedDelete{
+        {DSChangeStream::kIdField, makeResumeToken(kDefaultTs, testUuid(), o)},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kDeleteOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+        {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
+        {DSChangeStream::kDocumentKeyField, D{{"_id", 1}}},
+    };
+    checkTransformation(deleteEntry, expectedDelete);
 }
 
 TEST_F(ChangeStreamStageTest, TransformDrop) {
     OplogEntry dropColl = createCommand(BSON("drop" << nss.coll()), testUuid());
+
+    Document expectedDrop{
+        {DSChangeStream::kIdField, makeResumeToken(kDefaultTs, testUuid())},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kDropCollectionOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+        {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
+    };
+    Document expectedInvalidate{
+        {DSChangeStream::kIdField,
+         makeResumeToken(
+             kDefaultTs, testUuid(), Value(), ResumeTokenData::FromInvalidate::kFromInvalidate)},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kInvalidateOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+    };
+
+    checkTransformation(dropColl, expectedDrop, {}, kDefaultSpec, expectedInvalidate);
+}
+
+TEST_F(ChangeStreamStageTest, TransformDropCollFromMigrate) {
+    bool dropCollFromMigrate = true;
+    OplogEntry dropColl =
+        createCommand(BSON("drop" << nss.coll()), testUuid(), dropCollFromMigrate);
 
     Document expectedDrop{
         {DSChangeStream::kIdField, makeResumeToken(kDefaultTs, testUuid())},
@@ -738,23 +768,31 @@ TEST_F(ChangeStreamStageTest, TransformRename) {
     checkTransformation(rename, expectedRename, {}, kDefaultSpec, expectedInvalidate);
 }
 
-TEST_F(ChangeStreamStageTest, TransformInvalidateFromMigrate) {
-    NamespaceString otherColl("test.bar");
-
-    bool dropCollFromMigrate = true;
-    OplogEntry dropColl =
-        createCommand(BSON("drop" << nss.coll()), testUuid(), dropCollFromMigrate);
-    bool dropDBFromMigrate = true;
-    OplogEntry dropDB = createCommand(BSON("dropDatabase" << 1), boost::none, dropDBFromMigrate);
+TEST_F(ChangeStreamStageTest, TransformRenameFromMigrate) {
     bool renameFromMigrate = true;
+    NamespaceString otherColl("test.bar");
     OplogEntry rename =
         createCommand(BSON("renameCollection" << nss.ns() << "to" << otherColl.ns()),
-                      boost::none,
+                      testUuid(),
                       renameFromMigrate);
 
-    for (auto& entry : {dropColl, dropDB, rename}) {
-        checkTransformation(entry, boost::none);
-    }
+    Document expectedRename{
+        {DSChangeStream::kRenameTargetNssField,
+         D{{"db", otherColl.db()}, {"coll", otherColl.coll()}}},
+        {DSChangeStream::kIdField, makeResumeToken(kDefaultTs, testUuid())},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kRenameCollectionOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+        {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
+    };
+    Document expectedInvalidate{
+        {DSChangeStream::kIdField,
+         makeResumeToken(
+             kDefaultTs, testUuid(), Value(), ResumeTokenData::FromInvalidate::kFromInvalidate)},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kInvalidateOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+    };
+
+    checkTransformation(rename, expectedRename, {}, kDefaultSpec, expectedInvalidate);
 }
 
 TEST_F(ChangeStreamStageTest, TransformRenameTarget) {
@@ -1628,14 +1666,23 @@ TEST_F(ChangeStreamStageDBTest, TransformDelete) {
 
 TEST_F(ChangeStreamStageDBTest, TransformDeleteFromMigrate) {
     bool fromMigrate = true;
+    BSONObj o = BSON("_id" << 1 << "x" << 2);
     auto deleteEntry = makeOplogEntry(OpTypeEnum::kDelete,  // op type
                                       nss,                  // namespace
-                                      BSON("_id" << 1),     // o
-                                      boost::none,          // uuid
+                                      o,                    // o
+                                      testUuid(),           // uuid
                                       fromMigrate,          // fromMigrate
                                       boost::none);         // o2
 
-    checkTransformation(deleteEntry, boost::none);
+    // Delete
+    Document expectedDelete{
+        {DSChangeStream::kIdField, makeResumeToken(kDefaultTs, testUuid(), o)},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kDeleteOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+        {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
+        {DSChangeStream::kDocumentKeyField, D{{"_id", 1}, {"x", 2}}},
+    };
+    checkTransformation(deleteEntry, expectedDelete);
 }
 
 TEST_F(ChangeStreamStageDBTest, TransformDrop) {
@@ -1667,6 +1714,28 @@ TEST_F(ChangeStreamStageDBTest, TransformRename) {
 
 TEST_F(ChangeStreamStageDBTest, TransformDropDatabase) {
     OplogEntry dropDB = createCommand(BSON("dropDatabase" << 1), boost::none, false);
+
+    // Drop database entry doesn't have a UUID.
+    Document expectedDropDatabase{
+        {DSChangeStream::kIdField, makeResumeToken(kDefaultTs)},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kDropDatabaseOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+        {DSChangeStream::kNamespaceField, D{{"db", nss.db()}}},
+    };
+    Document expectedInvalidate{
+        {DSChangeStream::kIdField,
+         makeResumeToken(
+             kDefaultTs, Value(), Value(), ResumeTokenData::FromInvalidate::kFromInvalidate)},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kInvalidateOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+    };
+
+    checkTransformation(dropDB, expectedDropDatabase, {}, kDefaultSpec, expectedInvalidate);
+}
+
+TEST_F(ChangeStreamStageDBTest, TransformDropDatabaseFromMigrate) {
+    bool dropDbFromMigrate = true;
+    OplogEntry dropDB = createCommand(BSON("dropDatabase" << 1), boost::none, dropDbFromMigrate);
 
     // Drop database entry doesn't have a UUID.
     Document expectedDropDatabase{

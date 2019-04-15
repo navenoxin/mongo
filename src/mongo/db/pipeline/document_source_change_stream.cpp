@@ -264,40 +264,21 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
 
     // 2) Supported operations on the target namespace.
     BSONObj nsMatch = BSON("ns" << BSONRegEx(getNsRegexForChangeStream(nss)));
-    
-    // Allow chunk migration entries when on mongod. Only enable when $searchBeta enabled?
-    
-    // BSONArrayBuilder opMatchConditions;
-    // opMatchConditions.append(BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch)));
-    // if (excludeMigrationCrud) {
-    //     opMatchConditions.append(BSON("fromMigrate" << NE << true));
-    // }
 
-    bool excludeMigrationCrud = expCtx->inMongos;
-    BSONObj opMatch = excludeMigrationCrud
-        ? BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch))
-        : BSON("$and" << BSON_ARRAY(BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch)) << BSON("fromMigrate" << NE << true)));
-
-    // auto withoutMigrations = opMatchConditions.append(BSON("fromMigrate" << NE << true));
-    // auto opMatch = BSON(nsMatch["ns"] << BSON("$and" << opMatchConditions.arr()));
-    // auto opMatch = BSON("$and" << BSON_ARRAY(BSON(nsMatch["ns"] << BSON("$and" << opMatchConditions.arr()))));
-    // auto opMatch = BSON("$and" << opMatchConditions.arr());
-
-    // old
-    // auto opMatch = BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch));
+    // Allow chunk migration entries when run on mongod.
+    bool includeMigrationCrud = !expCtx->inMongos;
+    BSONObj nsMatchOrMigration = BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch));
+    BSONObj notFromMigration = BSON("fromMigrate" << NE << true);
+    BSONObj opMatch = includeMigrationCrud
+        ? nsMatchOrMigration
+        : BSON("$and" << BSON_ARRAY(nsMatchOrMigration << notFromMigration));
 
     // 3) Look for 'applyOps' which were created as part of a transaction.
     BSONObj applyOps = getTxnApplyOpsFilter(nsMatch["ns"], nss);
 
-    // auto notFromMigrate = BSON(OR(;
-    // auto runningOnShard = !expCtx->inMongos ? BSON(ALWAYS_TRUE) : ;
-
     // Match oplog entries after "start" and are either supported (1) commands or (2) operations.
     // Include those tagged "fromMigrate" when not run on mongos. Include the resume token, if
     // resuming, so we can verify it was still present in the oplog.
-
-    // BSONObj afterStart = BSON("ts" << (startFromInclusive ? GTE : GT) << startFrom);
-    // BSONObj supportedCommands = BSON(OR(opMatch, commandMatch, applyOps));
     return BSON("$and" << BSON_ARRAY(BSON("ts" << (startFromInclusive ? GTE : GT) << startFrom)
                                      << BSON(OR(opMatch, commandMatch, applyOps))));
 }
