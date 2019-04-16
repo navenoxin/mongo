@@ -253,8 +253,8 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
                                 << "c"
                                 << OR(commandsOnTargetDb, renameDropTarget, transactionCommit));
 
-    // 2) Supported operations on the target namespace.
-    BSONObj nsMatch = BSON("ns" << BSONRegEx(getNsRegexForChangeStream(nss)));
+    // Match the operation namespace.
+    BSONObj opNsMatch = BSON("ns" << BSONRegEx(getNsRegexForChangeStream(nss)));
 
     // 2.1) Normal CRUD ops.
     auto normalOpTypeMatch = BSON("op" << NE << "n");
@@ -266,32 +266,33 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
                                    << "migrateChunkToNewShard");
 
     // Supported operations that are either (2.1) or (2.2).
-    BSONObj nsMatchOrChunkMigratedMatch =
-        BSON(nsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch));
+    BSONObj normalOrChunkMigratedMatch =
+        BSON(opNsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch));
 
-    // Filter excluding operations resulting from chunk migration.
-    auto notFromMigrateFilter = BSON("fromMigrate" << NE << true);
+    // Filter excluding entries resulting from chunk migration.
+    BSONObj notFromMigrateFilter = BSON("fromMigrate" << NE << true);
 
-    // On mongos, filter operations resulting from a chunk migration. Do not filter those operations
-    // otherwise. On mongos, this translates to all operations from (2.1) or (2.2) that are not part
-    // of a chunk migration. On mongod, this is all operations from (2.1) or (2.2).
+    // 2) Supported operations on the operation namespace. On mongos, filter operations resulting
+    // from a chunk migration. Do not filter those operations otherwise. On mongos, this translates
+    // to all operations from (2.1) or (2.2) that are not part of a chunk migration. On mongod, this
+    // is all operations from (2.1) or (2.2).
     BSONObj opMatch = expCtx->inMongos
-        ? BSON("$and" << BSON_ARRAY(nsMatchOrChunkMigratedMatch << notFromMigrateFilter))
-        : nsMatchOrChunkMigratedMatch;
+        ? BSON("$and" << BSON_ARRAY(normalOrChunkMigratedMatch << notFromMigrateFilter))
+        : normalOrChunkMigratedMatch;
 
     // 3) Look for 'applyOps' which were created as part of a transaction.
-    BSONObj applyOps = getTxnApplyOpsFilter(nsMatch["ns"], nss);
+    BSONObj applyOps = getTxnApplyOpsFilter(opNsMatch["ns"], nss);
 
-    // All supported commands that are either (1) or (3), excluding those resulting from chunk
-    // migration.
-    BSONObj commandsAndApplyOpsMatch =
+    // Either (1) or (3), excluding those resulting from chunk migration.
+    BSONObj commandAndApplyOpsMatch =
         BSON("$and" << BSON_ARRAY(BSON(OR(commandMatch, applyOps)) << notFromMigrateFilter));
 
-    // Match oplog entries after "start" and are either supported (1) commands or (2) operations.
-    // Include those tagged "fromMigrate" when not run on mongos. Include the resume token, if
-    // resuming, so we can verify it was still present in the oplog.
+    // Match oplog entries after "start" that are either supported (1) commands or (2) operations.
+    // Only include CRUD operations tagged "fromMigrate" when running on mongod - exempt all other
+    // operations and commands with that tag. Include the resume token, if resuming, so we can
+    // verify it was still present in the oplog.
     return BSON("$and" << BSON_ARRAY(BSON("ts" << (startFromInclusive ? GTE : GT) << startFrom)
-                                     << BSON(OR(opMatch, commandsAndApplyOpsMatch))));
+                                     << BSON(OR(opMatch, commandAndApplyOpsMatch))));
 }
 
 namespace {
