@@ -276,9 +276,9 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
     // from a chunk migration. Do not filter those operations otherwise. On mongos, this translates
     // to all operations from (2.1) or (2.2) that are not part of a chunk migration. On mongod, this
     // is all operations from (2.1) or (2.2).
-    BSONObj opMatch = expCtx->inMongos
+    BSONObj opMatch = (expCtx->fromMongos
         ? BSON("$and" << BSON_ARRAY(normalOrChunkMigratedMatch << notFromMigrateFilter))
-        : normalOrChunkMigratedMatch;
+        : normalOrChunkMigratedMatch);
 
     // 3) Look for 'applyOps' which were created as part of a transaction.
     BSONObj applyOps = getTxnApplyOpsFilter(opNsMatch["ns"], nss);
