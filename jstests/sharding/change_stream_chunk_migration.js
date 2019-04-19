@@ -2,7 +2,7 @@
 // it's migrating a chunk to a new shard.
 // @tags: [uses_change_streams]
 
-var checkEvents = function (changeStream, expectedEvents) {
+var checkEvents = function(changeStream, expectedEvents) {
     expectedEvents.forEach((event) => {
         assert.soon(() => changeStream.hasNext());
         let next = changeStream.next();
@@ -54,7 +54,8 @@ var makeEvent = function(docId, opType) {
 
     // Open a change stream cursor before the collection is sharded.
     const changeStream = mongosColl.aggregate([{$changeStream: {}}]);
-    const changeStreamShowMigrations = mongosColl.aggregate([{$changeStream: {showMigrationEvents: true}}]);
+    const changeStreamShowMigrations =
+        mongosColl.aggregate([{$changeStream: {showMigrationEvents: true}}]);
 
     assert(!changeStream.hasNext(), "Do not expect any results yet");
     assert(!changeStreamShowMigrations.hasNext(), "Do not expect any results yet");
@@ -122,11 +123,17 @@ var makeEvent = function(docId, opType) {
     assert.writeOK(mongosColl.insert({_id: 22}, {writeConcern: {w: "majority"}}));
 
     let insertInBoth = [makeEvent(1, "insert"), makeEvent(21, "insert")];
-    let migrateToShardOne = [makeEvent(0, "insert"), makeEvent(1, "insert"), makeEvent(0, "delete"), makeEvent(1, "delete")];
+    let migrateToShardOne = [
+        makeEvent(0, "insert"),
+        makeEvent(1, "insert"),
+        makeEvent(0, "delete"),
+        makeEvent(1, "delete")
+    ];
     let insertInAll = [makeEvent(-2, "insert"), makeEvent(2, "insert"), makeEvent(22, "insert")];
 
     checkEvents(changeStream, [...insertInBoth, ...insertInAll]);
-    checkEvents(changeStreamShowMigrations, [...insertInBoth, ...migrateToShardOne, ...insertInAll]);
+    checkEvents(changeStreamShowMigrations,
+                [...insertInBoth, ...migrateToShardOne, ...insertInAll]);
 
     // // Make sure we can see all the inserts, without any 'retryNeeded' entries.
     // for (let nextExpectedId of[1, 21, -2, 2, 22]) {
@@ -191,7 +198,8 @@ var makeEvent = function(docId, opType) {
     // ];
 
     checkEvents(changeStream, [...insertAll, ...insertAllAgain]);
-    checkEvents(changeStreamShowMigrations, [...insertAll, ...migrateMinkeyToZero, ...insertAllAgain]);
+    checkEvents(changeStreamShowMigrations,
+                [...insertAll, ...migrateMinkeyToZero, ...insertAllAgain]);
 
     // Make sure we can see all the inserts, without any 'retryNeeded' entries.
     // for (let nextExpectedId of[-3, 3, 23, -4, 4, 24]) {
@@ -284,7 +292,6 @@ var makeEvent = function(docId, opType) {
     // }
     assert(!changeStream.hasNext());
     assert(!changeStreamShowMigrations.hasNext());
-
 
     st.stop();
     newShard.stopSet();
