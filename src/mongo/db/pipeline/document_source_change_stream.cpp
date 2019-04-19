@@ -209,7 +209,8 @@ std::string DocumentSourceChangeStream::getNsRegexForChangeStream(const Namespac
 BSONObj DocumentSourceChangeStream::buildMatchFilter(
     const boost::intrusive_ptr<ExpressionContext>& expCtx,
     Timestamp startFrom,
-    bool startFromInclusive) {
+    bool startFromInclusive,
+    bool showMigrationEvents) {
     auto nss = expCtx->ns;
 
     ChangeStreamType sourceType = getChangeStreamType(nss);
@@ -272,14 +273,12 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
     // Filter excluding entries resulting from chunk migration.
     BSONObj notFromMigrateFilter = BSON("fromMigrate" << NE << true);
 
-    // 2) Supported operations on the operation namespace. On mongos, filter operations resulting
-    // from a chunk migration. Do not filter those operations otherwise. On mongos, this translates
-    // to all operations from (2.1) or (2.2) that are not part of a chunk migration. On mongod, this
-    // is all operations from (2.1) or (2.2).
+    // 2) Supported operations on the operation namespace, optionally including those from
+    // migrations.
     BSONObj opMatch =
-        (expCtx->fromMongos
-             ? BSON("$and" << BSON_ARRAY(normalOrChunkMigratedMatch << notFromMigrateFilter))
-             : normalOrChunkMigratedMatch);
+        (showMigrationEvents
+             ? normalOrChunkMigratedMatch
+             : BSON("$and" << BSON_ARRAY(normalOrChunkMigratedMatch << notFromMigrateFilter)));
 
     // 3) Look for 'applyOps' which were created as part of a transaction.
     BSONObj applyOps = getTxnApplyOpsFilter(opNsMatch["ns"], nss);
@@ -305,6 +304,7 @@ list<intrusive_ptr<DocumentSource>> buildPipeline(const intrusive_ptr<Expression
     boost::optional<Timestamp> startFrom;
     intrusive_ptr<DocumentSource> resumeStage = nullptr;
     bool ignoreFirstInvalidate = false;
+    bool showMigrationEvents = spec.getShowMigrationEvents();
 
     auto resumeAfter = spec.getResumeAfter();
     auto startAfter = spec.getStartAfter();
@@ -371,7 +371,8 @@ list<intrusive_ptr<DocumentSource>> buildPipeline(const intrusive_ptr<Expression
     if (startFrom) {
         const bool startFromInclusive = (resumeStage != nullptr);
         stages.push_back(DocumentSourceOplogMatch::create(
-            DocumentSourceChangeStream::buildMatchFilter(expCtx, *startFrom, startFromInclusive),
+            DocumentSourceChangeStream::buildMatchFilter(
+                expCtx, *startFrom, startFromInclusive, showMigrationEvents),
             expCtx));
 
         // If we haven't already populated the initial PBRT, then we are starting from a specific
