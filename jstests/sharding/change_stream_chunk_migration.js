@@ -197,6 +197,7 @@ var makeEvent = function(docId, opType) {
     //     ...insertAllAgain,
     // ];
 
+    // TODO CHECK THIS, add case for migration due to update, should be goood
     checkEvents(changeStream, [...insertAll, ...insertAllAgain]);
     checkEvents(changeStreamShowMigrations,
                 [...insertAll, ...migrateMinkeyToZero, ...insertAllAgain]);
