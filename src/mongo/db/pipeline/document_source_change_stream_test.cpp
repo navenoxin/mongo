@@ -539,12 +539,26 @@ TEST_F(ChangeStreamStageTest, TransformInsertDocKeyJustId) {
 
 TEST_F(ChangeStreamStageTest, TransformInsertFromMigrate) {
     bool fromMigrate = true;
+    auto insert = makeOplogEntry(OpTypeEnum::kInsert,
+                                 nss,
+                                 BSON("_id" << 1 << "x" << 1),
+                                 boost::none,
+                                 fromMigrate,
+                                 boost::none);
+
+    checkTransformation(insert, boost::none);
+}
+
+TEST_F(ChangeStreamStageTest, TransformInsertFromMigrateShowMigrations) {
+    bool fromMigrate = true;
     auto insert = makeOplogEntry(OpTypeEnum::kInsert,           // op type
                                  nss,                           // namespace
                                  BSON("x" << 2 << "_id" << 1),  // o
                                  testUuid(),                    // uuid
                                  fromMigrate,                   // fromMigrate
                                  boost::none);                  // o2
+
+    auto spec = fromjson("{$changeStream: {showMigrationEvents: true}}");
     Document expectedInsert{
         {DSChangeStream::kIdField,
          makeResumeToken(kDefaultTs, testUuid(), BSON("_id" << 1 << "x" << 2))},
@@ -554,7 +568,7 @@ TEST_F(ChangeStreamStageTest, TransformInsertFromMigrate) {
         {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
         {DSChangeStream::kDocumentKeyField, D{{"_id", 1}, {"x", 2}}},  // _id first
     };
-    checkTransformation(insert, expectedInsert, {{"_id"}, {"x"}});
+    checkTransformation(insert, expectedInsert, {{"_id"}, {"x"}}, spec);
 }
 
 TEST_F(ChangeStreamStageTest, TransformUpdateFields) {
@@ -684,6 +698,18 @@ TEST_F(ChangeStreamStageTest, TransformDelete) {
 
 TEST_F(ChangeStreamStageTest, TransformDeleteFromMigrate) {
     bool fromMigrate = true;
+    auto deleteEntry = makeOplogEntry(OpTypeEnum::kDelete,  // op type
+                                      nss,                  // namespace
+                                      BSON("_id" << 1),     // o
+                                      boost::none,          // uuid
+                                      fromMigrate,          // fromMigrate
+                                      boost::none);         // o2
+
+    checkTransformation(deleteEntry, boost::none);
+}
+
+TEST_F(ChangeStreamStageTest, TransformDeleteFromMigrateShowMigrations) {
+    bool fromMigrate = true;
     BSONObj o = BSON("_id" << 1);
     auto deleteEntry = makeOplogEntry(OpTypeEnum::kDelete,  // op type
                                       nss,                  // namespace
@@ -691,6 +717,8 @@ TEST_F(ChangeStreamStageTest, TransformDeleteFromMigrate) {
                                       testUuid(),           // uuid
                                       fromMigrate,          // fromMigrate
                                       boost::none);         // o2
+
+    auto spec = fromjson("{$changeStream: {showMigrationEvents: true}}");
     Document expectedDelete{
         {DSChangeStream::kIdField, makeResumeToken(kDefaultTs, testUuid(), o)},
         {DSChangeStream::kOperationTypeField, DSChangeStream::kDeleteOpType},
@@ -698,7 +726,8 @@ TEST_F(ChangeStreamStageTest, TransformDeleteFromMigrate) {
         {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
         {DSChangeStream::kDocumentKeyField, D{{"_id", 1}}},
     };
-    checkTransformation(deleteEntry, expectedDelete);
+
+    checkTransformation(deleteEntry, expectedDelete, {}, spec);
 }
 
 TEST_F(ChangeStreamStageTest, TransformDrop) {
@@ -1634,6 +1663,18 @@ TEST_F(ChangeStreamStageDBTest, TransformDelete) {
 
 TEST_F(ChangeStreamStageDBTest, TransformDeleteFromMigrate) {
     bool fromMigrate = true;
+    auto deleteEntry = makeOplogEntry(OpTypeEnum::kDelete,  // op type
+                                      nss,                  // namespace
+                                      BSON("_id" << 1),     // o
+                                      boost::none,          // uuid
+                                      fromMigrate,          // fromMigrate
+                                      boost::none);         // o2
+
+    checkTransformation(deleteEntry, boost::none);
+}
+
+TEST_F(ChangeStreamStageDBTest, TransformDeleteFromMigrateShowMigrations) {
+    bool fromMigrate = true;
     BSONObj o = BSON("_id" << 1 << "x" << 2);
     auto deleteEntry = makeOplogEntry(OpTypeEnum::kDelete,  // op type
                                       nss,                  // namespace
@@ -1643,6 +1684,7 @@ TEST_F(ChangeStreamStageDBTest, TransformDeleteFromMigrate) {
                                       boost::none);         // o2
 
     // Delete
+    auto spec = fromjson("{$changeStream: {showMigrationEvents: true}}");
     Document expectedDelete{
         {DSChangeStream::kIdField, makeResumeToken(kDefaultTs, testUuid(), o)},
         {DSChangeStream::kOperationTypeField, DSChangeStream::kDeleteOpType},
@@ -1650,7 +1692,8 @@ TEST_F(ChangeStreamStageDBTest, TransformDeleteFromMigrate) {
         {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
         {DSChangeStream::kDocumentKeyField, D{{"_id", 1}, {"x", 2}}},
     };
-    checkTransformation(deleteEntry, expectedDelete);
+
+    checkTransformation(deleteEntry, expectedDelete, {}, spec);
 }
 
 TEST_F(ChangeStreamStageDBTest, TransformDrop) {
