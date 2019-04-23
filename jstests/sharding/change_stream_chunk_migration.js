@@ -131,7 +131,7 @@ var makeEvent = function(docId, opType) {
         makeEvent(2, "insert"),
         makeEvent(22, "insert"),
     ];
-    shardZeroEvents = [
+    var shardZeroEvents = [
         makeEvent(1, "insert"),
         makeEvent(0, "delete"),
         makeEvent(1, "delete"),
@@ -293,7 +293,6 @@ var makeEvent = function(docId, opType) {
     assert(!changeStreamShardZero.hasNext());
     assert(!changeStreamShardOne.hasNext());
     assert(!changeStreamNewShard.hasNext());
-    jsTestLog("made it to the end");
 
     st.stop();
     newShard.stopSet();
