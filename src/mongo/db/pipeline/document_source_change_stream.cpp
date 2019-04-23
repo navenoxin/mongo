@@ -287,9 +287,9 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
         BSON("$and" << BSON_ARRAY(BSON(OR(commandMatch, applyOps)) << notFromMigrateFilter));
 
     // Match oplog entries after "start" that are either supported (1) commands or (2) operations.
-    // Only include CRUD operations tagged "fromMigrate" when running on mongod - exempt all other
-    // operations and commands with that tag. Include the resume token, if resuming, so we can
-    // verify it was still present in the oplog.
+    // Only include CRUD operations tagged "fromMigrate" when the "showMigrationEvents" option is
+    // set - exempt all other operations and commands with that tag. Include the resume token, if
+    // resuming, so we can verify it was still present in the oplog.
     return BSON("$and" << BSON_ARRAY(BSON("ts" << (startFromInclusive ? GTE : GT) << startFrom)
                                      << BSON(OR(opMatch, commandAndApplyOpsMatch))));
 }
