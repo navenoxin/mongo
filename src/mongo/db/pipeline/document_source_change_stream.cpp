@@ -260,14 +260,14 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
     auto normalOpTypeMatch = BSON("op" << NE << "n");
 
     // 2.2) A chunk gets migrated to a new shard that doesn't have any chunks.
-    auto chunkMigratedMatch = BSON("op"
-                                   << "n"
-                                   << "o2.type"
-                                   << "migrateChunkToNewShard");
+    auto chunkMigratedNewShardMatch = BSON("op"
+                                           << "n"
+                                           << "o2.type"
+                                           << "migrateChunkToNewShard");
 
     // Supported operations that are either (2.1) or (2.2).
     BSONObj normalOrChunkMigratedMatch =
-        BSON(opNsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedMatch));
+        BSON(opNsMatch["ns"] << OR(normalOpTypeMatch, chunkMigratedNewShardMatch));
 
     // Filter excluding entries resulting from chunk migration.
     BSONObj notFromMigrateFilter = BSON("fromMigrate" << NE << true);
