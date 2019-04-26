@@ -2476,6 +2476,8 @@ intrusive_ptr<Expression> ExpressionMeta::parse(
         return new ExpressionMeta(expCtx, MetaType::TEXT_SCORE);
     } else if (expr.valueStringData() == "randVal") {
         return new ExpressionMeta(expCtx, MetaType::RAND_VAL);
+    } else if (expr.valueStringData() == "searchScore") {
+        return new ExpressionMeta(expCtx, MetaType::SEARCH_SCORE);
     } else {
         uasserted(17308, "Unsupported argument to $meta: " + expr.String());
     }
@@ -2493,6 +2495,9 @@ Value ExpressionMeta::serialize(bool explain) const {
         case MetaType::RAND_VAL:
             return Value(DOC("$meta"
                              << "randVal"_sd));
+        case MetaType::SEARCH_SCORE:
+            return Value(DOC("$meta"
+                             << "searchScore"_sd));
     }
     MONGO_UNREACHABLE;
 }
@@ -2503,6 +2508,8 @@ Value ExpressionMeta::evaluate(const Document& root) const {
             return root.hasTextScore() ? Value(root.getTextScore()) : Value();
         case MetaType::RAND_VAL:
             return root.hasRandMetaField() ? Value(root.getRandMetaField()) : Value();
+        case MetaType::SEARCH_SCORE:
+            return root.hasSearchScore() ? Value(root.getSearchScore()) : Value();
     }
     MONGO_UNREACHABLE;
 }
@@ -2510,6 +2517,8 @@ Value ExpressionMeta::evaluate(const Document& root) const {
 void ExpressionMeta::_doAddDependencies(DepsTracker* deps) const {
     if (_metaType == MetaType::TEXT_SCORE) {
         deps->setNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE, true);
+    } else if (_metaType == MetaType::SEARCH_SCORE) {
+        deps->setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
     }
 }
 

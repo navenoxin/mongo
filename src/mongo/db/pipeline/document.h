@@ -283,6 +283,13 @@ public:
         return storage().getGeoNearPoint();
     }
 
+    bool hasSearchScore() const {
+        return storage().hasSearchScore();
+    }
+    double getSearchScore() const {
+        return storage().getSearchScore();
+    }
+
     /// members for Sorter
     struct SorterDeserializeSettings {};  // unused
     void serializeForSorter(BufBuilder& buf) const;

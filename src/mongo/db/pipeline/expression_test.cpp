@@ -262,6 +262,7 @@ protected:
         ASSERT_BSONOBJ_EQ(expectedDependencies, dependenciesBson.arr());
         ASSERT_EQUALS(false, dependencies.needWholeDocument);
         ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
+        ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
     }
 
     void assertContents(const intrusive_ptr<Testable>& expr, const BSONArray& expectedContents) {
@@ -1961,6 +1962,7 @@ public:
         ASSERT_EQUALS(1U, dependencies.fields.count("a.b"));
         ASSERT_EQUALS(false, dependencies.needWholeDocument);
         ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
+        ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
     }
 };
 
@@ -2467,6 +2469,7 @@ public:
         ASSERT_EQUALS(0U, dependencies.fields.size());
         ASSERT_EQUALS(false, dependencies.needWholeDocument);
         ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
+        ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
     }
 };
 
@@ -2971,6 +2974,7 @@ public:
         ASSERT_EQUALS(1U, dependencies.fields.count("a.b"));
         ASSERT_EQUALS(false, dependencies.needWholeDocument);
         ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
+        ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
     }
 };
 

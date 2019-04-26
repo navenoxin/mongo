@@ -224,6 +224,7 @@ intrusive_ptr<DocumentStorage> DocumentStorage::clone() const {
         out->_sortKey = _sortKey.getOwned();
         out->_geoNearDistance = _geoNearDistance;
         out->_geoNearPoint = _geoNearPoint.getOwned();
+        out->_searchScore = _searchScore;
     }
 
     return out;
@@ -514,6 +515,10 @@ void Document::serializeForSorter(BufBuilder& buf) const {
         buf.appendNum(char(DocumentStorage::MetaType::SORT_KEY + 1));
         getSortKeyMetaField().appendSelfToBufBuilder(buf);
     }
+    if (hasSearchScore()) {
+        buf.appendNum(char(DocumentStorage::MetaType::SEARCH_SCORE + 1));
+        buf.appendNum(getSearchScore());
+    }
     buf.appendNum(char(0));
 }
 
@@ -533,6 +538,8 @@ Document Document::deserializeForSorter(BufReader& buf, const SorterDeserializeS
         } else if (marker == char(DocumentStorage::MetaType::SORT_KEY) + 1) {
             doc.setSortKeyMetaField(
                 BSONObj::deserializeForSorter(buf, BSONObj::SorterDeserializeSettings()));
+        } else if (marker == char(DocumentStorage::MetaType::SEARCH_SCORE) + 1) {
+            doc.setSearchScore(buf.read<LittleEndian<double>>());
         } else {
             uasserted(28744, "Unrecognized marker, unable to deserialize buffer");
         }

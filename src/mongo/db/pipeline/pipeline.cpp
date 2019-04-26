@@ -590,15 +590,21 @@ DepsTracker Pipeline::getDependencies(DepsTracker::MetadataAvailable metadataAva
     if (!knowAllFields)
         deps.needWholeDocument = true;  // don't know all fields we need
 
-    if (metadataAvailable & DepsTracker::MetadataAvailable::kTextScore) {
-        // If there is a text score, assume we need to keep it if we can't prove we don't. If we are
-        // the first half of a pipeline which has been split, future stages might need it.
+    // TODO doublecheck logic bubbling
+    if (metadataAvailable) {
         if (!knowAllMeta) {
-            deps.setNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE, true);
+            // If there is a text or search score, assume we need to keep it if we can't prove we don't. If we are
+            // the first half of a pipeline which has been split, future stages might need it.
+            if (DepsTracker::MetadataAvailable::kTextScore) {
+                deps.setNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE, true);
+            } else if (DepsTracker::MetadataAvailable::kSearchScore) {
+                deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
+            }
         }
     } else {
-        // If there is no text score available, then we don't need to ask for it.
+        // If there is no text or search score available, then we don't need to ask for it.
         deps.setNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE, false);
+        deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, false);
     }
 
     return deps;

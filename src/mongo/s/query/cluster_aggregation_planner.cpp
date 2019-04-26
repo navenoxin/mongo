@@ -217,7 +217,7 @@ void limitFieldsSentFromShardsToMerger(Pipeline* shardPipe, Pipeline* mergePipe)
         mergeDeps.fields.insert("_id");
 
     // Remove metadata from dependencies since it automatically flows through projection and we
-    // don't want to project it in to the document.
+    // don't want to project it in to the document. TODO what does this comment mean?
     mergeDeps.setNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE, false);
 
     // HEURISTIC: only apply optimization if none of the shard stages have an exhaustive list of
