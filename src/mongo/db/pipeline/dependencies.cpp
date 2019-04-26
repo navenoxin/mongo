@@ -200,9 +200,10 @@ void DepsTracker::setNeedsMetadata(MetadataType type, bool required) {
             _needGeoNearPoint = required;
             return;
         case MetadataType::SEARCH_SCORE:
-            uassert(31070,
-                    "pipeline requires search score metadata, but there is no search score available",
-                    !required || isMetadataAvailable(type));
+            uassert(
+                31070,
+                "pipeline requires search score metadata, but there is no search score available",
+                !required || isMetadataAvailable(type));
             _needTextScore = required;
             return;
     }
