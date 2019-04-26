@@ -451,6 +451,7 @@ TEST_F(BucketAutoTests, ShouldAddDependenciesOfGroupByFieldAndComputedFields) {
 
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
+    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(BucketAutoTests, ShouldNeedTextScoreInDependenciesFromGroupByField) {
@@ -463,6 +464,7 @@ TEST_F(BucketAutoTests, ShouldNeedTextScoreInDependenciesFromGroupByField) {
 
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(true, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
+    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(BucketAutoTests, ShouldNeedTextScoreInDependenciesFromOutputField) {
@@ -479,6 +481,7 @@ TEST_F(BucketAutoTests, ShouldNeedTextScoreInDependenciesFromOutputField) {
 
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(true, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
+    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(BucketAutoTests, SerializesDefaultAccumulatorIfOutputFieldIsNotSpecified) {

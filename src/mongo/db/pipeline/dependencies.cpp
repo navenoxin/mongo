@@ -151,6 +151,8 @@ bool DepsTracker::getNeedsMetadata(MetadataType type) const {
             return _needGeoNearDistance;
         case MetadataType::GEO_NEAR_POINT:
             return _needGeoNearPoint;
+        case MetadataType::SEARCH_SCORE:
+            return _needSearchScore;
     }
     MONGO_UNREACHABLE;
 }
@@ -165,6 +167,8 @@ bool DepsTracker::isMetadataAvailable(MetadataType type) const {
             return _metadataAvailable & MetadataAvailable::kGeoNearDistance;
         case MetadataType::GEO_NEAR_POINT:
             return _metadataAvailable & MetadataAvailable::kGeoNearPoint;
+        case MetadataType::SEARCH_SCORE:
+            return _metadataAvailable & MetadataAvailable::kSearchScore;
     }
     MONGO_UNREACHABLE;
 }
@@ -195,6 +199,12 @@ void DepsTracker::setNeedsMetadata(MetadataType type, bool required) {
             invariant(required || !_needGeoNearPoint);
             _needGeoNearPoint = required;
             return;
+        case MetadataType::SEARCH_SCORE:
+            uassert(31070,
+                    "pipeline requires search score metadata, but there is no search score available",
+                    !required || isMetadataAvailable(type));
+            _needTextScore = required;
+            return;
     }
     MONGO_UNREACHABLE;
 }
@@ -212,6 +222,9 @@ std::vector<DepsTracker::MetadataType> DepsTracker::getAllRequiredMetadataTypes(
     }
     if (_needGeoNearPoint) {
         reqs.push_back(MetadataType::GEO_NEAR_POINT);
+    }
+    if (_needSearchScore) {
+        reqs.push_back(MetadataType::SEARCH_SCORE);
     }
     return reqs;
 }
