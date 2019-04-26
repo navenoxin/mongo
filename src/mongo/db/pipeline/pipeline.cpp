@@ -593,7 +593,8 @@ DepsTracker Pipeline::getDependencies(DepsTracker::MetadataAvailable metadataAva
     // TODO doublecheck logic bubbling
     if (metadataAvailable) {
         if (!knowAllMeta) {
-            // If there is a text or search score, assume we need to keep it if we can't prove we don't. If we are
+            // If there is a text or search score, assume we need to keep it if we can't prove we
+            // don't. If we are
             // the first half of a pipeline which has been split, future stages might need it.
             if (DepsTracker::MetadataAvailable::kTextScore) {
                 deps.setNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE, true);

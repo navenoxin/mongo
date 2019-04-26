@@ -2904,7 +2904,8 @@ TEST_F(PipelineDependenciesTest, ShouldThrowIfSearchScoreIsNeededButNotPresent) 
                   AssertionException);
 }
 
-TEST_F(PipelineDependenciesTest, ShouldRequireSearchScoreIfAvailableAndNoStageReturnsExhaustiveMeta) {
+TEST_F(PipelineDependenciesTest,
+       ShouldRequireSearchScoreIfAvailableAndNoStageReturnsExhaustiveMeta) {
     auto ctx = getExpCtx();
     auto pipeline = unittest::assertGet(Pipeline::create({}, ctx));
 
