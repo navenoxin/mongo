@@ -298,6 +298,9 @@ public:
         if (source.hasGeoNearPoint()) {
             setGeoNearPoint(source.getGeoNearPoint());
         }
+        if (source.hasSearchScore()) {
+            setSearchScore(source.getSearchScore());
+        }
     }
 
     bool hasTextScore() const {

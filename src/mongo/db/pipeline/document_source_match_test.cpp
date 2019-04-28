@@ -221,7 +221,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddDependenciesOfAllBranchesOfOrClause) {
     ASSERT_EQUALS(2U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, TextSearchShouldRequireWholeDocumentAndTextScore) {
@@ -241,7 +240,6 @@ TEST_F(DocumentSourceMatchTest, ShouldOnlyAddOuterFieldAsDependencyOfImplicitEqu
     ASSERT_EQUALS(1U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldOnlyAddOuterFieldAsDependencyOfClausesWithinElemMatch) {
@@ -253,7 +251,6 @@ TEST_F(DocumentSourceMatchTest, ShouldOnlyAddOuterFieldAsDependencyOfClausesWith
     ASSERT_EQUALS(1U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest,
@@ -271,7 +268,6 @@ TEST_F(DocumentSourceMatchTest,
     ASSERT_EQUALS(1U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest,
@@ -283,7 +279,6 @@ TEST_F(DocumentSourceMatchTest,
     ASSERT_EQUALS(0U, dependencies.fields.size());
     ASSERT_EQUALS(true, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest,
@@ -295,7 +290,6 @@ TEST_F(DocumentSourceMatchTest,
     ASSERT_EQUALS(0U, dependencies1.fields.size());
     ASSERT_EQUALS(true, dependencies1.needWholeDocument);
     ASSERT_EQUALS(false, dependencies1.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 
     query = fromjson("{a: {$_internalSchemaObjectMatch: {$_internalSchemaMaxProperties: 1}}}");
     match = DocumentSourceMatch::create(query, getExpCtx());
@@ -305,7 +299,6 @@ TEST_F(DocumentSourceMatchTest,
     ASSERT_EQUALS(1U, dependencies2.fields.count("a"));
     ASSERT_EQUALS(false, dependencies2.needWholeDocument);
     ASSERT_EQUALS(false, dependencies2.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest,
@@ -319,7 +312,6 @@ TEST_F(DocumentSourceMatchTest,
     ASSERT_EQUALS(1U, dependencies.fields.size());
     ASSERT_EQUALS(true, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest,
@@ -331,7 +323,6 @@ TEST_F(DocumentSourceMatchTest,
     ASSERT_EQUALS(0U, dependencies.fields.size());
     ASSERT_EQUALS(true, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithInternalSchemaType) {
@@ -343,7 +334,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithIntern
     ASSERT_EQUALS(1U, dependencies.fields.count("a"));
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithInternalSchemaCond) {
@@ -357,7 +347,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithIntern
     ASSERT_EQUALS(1U, dependencies.fields.count("c"));
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithInternalSchemaXor) {
@@ -371,7 +360,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithIntern
     ASSERT_EQUALS(1U, dependencies.fields.count("c"));
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithEmptyJSONSchema) {
@@ -382,7 +370,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithEmptyJ
     ASSERT_EQUALS(0U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithJSONSchemaProperties) {
@@ -394,7 +381,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForClausesWithJSONSc
     ASSERT_EQUALS(1U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForMultiplePredicatesWithJSONSchema) {
@@ -407,7 +393,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddCorrectDependenciesForMultiplePredicate
     ASSERT_EQUALS(1U, dependencies.fields.count("b"));
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldAddOuterFieldToDependenciesIfElemMatchContainsNoFieldNames) {
@@ -419,7 +404,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddOuterFieldToDependenciesIfElemMatchCont
     ASSERT_EQUALS(1U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldAddNotClausesFieldAsDependency) {
@@ -430,7 +414,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddNotClausesFieldAsDependency) {
     ASSERT_EQUALS(1U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ShouldAddDependenciesOfEachNorClause) {
@@ -443,7 +426,6 @@ TEST_F(DocumentSourceMatchTest, ShouldAddDependenciesOfEachNorClause) {
     ASSERT_EQUALS(2U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, CommentShouldNotAddAnyDependencies) {
@@ -453,7 +435,6 @@ TEST_F(DocumentSourceMatchTest, CommentShouldNotAddAnyDependencies) {
     ASSERT_EQUALS(0U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, ClauseAndedWithCommentShouldAddDependencies) {
@@ -465,7 +446,6 @@ TEST_F(DocumentSourceMatchTest, ClauseAndedWithCommentShouldAddDependencies) {
     ASSERT_EQUALS(1U, dependencies.fields.size());
     ASSERT_EQUALS(false, dependencies.needWholeDocument);
     ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(DocumentSourceMatchTest, MultipleMatchStagesShouldCombineIntoOne) {

@@ -160,5 +160,36 @@ TEST(DependenciesToProjectionTest,
     ASSERT_BSONOBJ_EQ(deps.toProjection(), BSON(Document::metaFieldTextScore << metaTextScore));
 }
 
+TEST(DependenciesToProjectionTest,
+     ShouldRequireFieldsAndSearchScoreIfSearchScoreNeededWithoutWholeDocument) {
+    const char* array[] = {"a"};  // needSearchScore without needWholeDocument
+    DepsTracker deps(DepsTracker::MetadataAvailable::kSearchScore);
+    deps.fields = arrayToSet(array);
+    deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
+    ASSERT_BSONOBJ_EQ(
+        deps.toProjection(),
+        BSON(Document::metaFieldSearchScore << metaSearchScore << "a" << 1 << "_id" << 0));
+}
+
+TEST(DependenciesToProjectionTest, ShouldAttemptToExcludeOtherFieldsIfOnlySearchScoreIsNeeded) {
+    DepsTracker deps(DepsTracker::MetadataAvailable::kTextScore);
+    deps.fields = {};
+    deps.needWholeDocument = false;
+    deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
+    ASSERT_BSONOBJ_EQ(deps.toProjection(),
+                      BSON(Document::metaFieldSearchScore << metaSearchScore << "_id" << 0
+                                                        << "$noFieldsNeeded"
+                                                        << 1));
+}
+
+TEST(DependenciesToProjectionTest,
+     ShouldRequireSearchScoreIfNoFieldsPresentButWholeDocumentIsNeeded) {
+    DepsTracker deps(DepsTracker::MetadataAvailable::kSearchScore);
+    deps.fields = {};
+    deps.needWholeDocument = true;
+    deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
+    ASSERT_BSONOBJ_EQ(deps.toProjection(), BSON(Document::metaFieldSearchScore << metaSearchScore));
+}
+
 }  // namespace
 }  // namespace mongo

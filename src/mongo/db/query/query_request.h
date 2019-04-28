@@ -138,6 +138,7 @@ public:
     static const std::string metaRecordId;
     static const std::string metaSortKey;
     static const std::string metaTextScore;
+    static const std::string metaSearchScore;
 
     const NamespaceString& nss() const {
         invariant(!_nss.isEmpty());
