@@ -46,6 +46,8 @@ using std::string;
 
 static const BSONObj metaTextScore = BSON("$meta"
                                           << "textScore");
+static const BSONObj metaSearchScore = BSON("$meta"
+                                          << "searchScore");
 
 template <size_t ArrayLen>
 set<string> arrayToSet(const char* (&array)[ArrayLen]) {
