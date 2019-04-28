@@ -49,7 +49,8 @@ const std::vector<StringData> Document::allMetadataFieldNames = {Document::metaF
                                                                  Document::metaFieldRandVal,
                                                                  Document::metaFieldSortKey,
                                                                  Document::metaFieldGeoNearDistance,
-                                                                 Document::metaFieldGeoNearPoint};
+                                                                 Document::metaFieldGeoNearPoint,
+                                                                 Document::metaFieldSearchScore};
 
 Position DocumentStorage::findField(StringData requested) const {
     int reqSize = requested.size();  // get size calculation out of the way if needed
@@ -290,6 +291,7 @@ constexpr StringData Document::metaFieldRandVal;
 constexpr StringData Document::metaFieldSortKey;
 constexpr StringData Document::metaFieldGeoNearDistance;
 constexpr StringData Document::metaFieldGeoNearPoint;
+constexpr StringData Document::metaFieldSearchScore;
 
 BSONObj Document::toBsonWithMetaData() const {
     BSONObjBuilder bb;
@@ -304,6 +306,8 @@ BSONObj Document::toBsonWithMetaData() const {
         bb.append(metaFieldGeoNearDistance, getGeoNearDistance());
     if (hasGeoNearPoint())
         getGeoNearPoint().addToBsonObj(&bb, metaFieldGeoNearPoint);
+    if (hasSearchScore())
+        bb.append(metaFieldSearchScore, getSearchScore());
     return bb.obj();
 }
 
@@ -317,6 +321,9 @@ Document Document::fromBsonWithMetaData(const BSONObj& bson) {
         if (fieldName[0] == '$') {
             if (fieldName == metaFieldTextScore) {
                 md.setTextScore(elem.Double());
+                continue;
+            if (fieldName == metaFieldSearchScore) {
+                md.setSearchScore(elem.Double());
                 continue;
             } else if (fieldName == metaFieldRandVal) {
                 md.setRandMetaField(elem.Double());

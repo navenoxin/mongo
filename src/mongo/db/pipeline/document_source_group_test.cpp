@@ -807,8 +807,6 @@ public:
         ASSERT_EQUALS(1U, dependencies.fields.count("v"));
         ASSERT_EQUALS(false, dependencies.needWholeDocument);
         ASSERT_EQUALS(false, dependencies.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-        ASSERT_EQUALS(false,
-                      dependencies.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
     }
 };
 
