@@ -61,7 +61,7 @@ struct DepsTracker {
         EXHAUSTIVE_FIELDS = 0x2,
 
         // Later stages won't need more metadata from input. For example, a $group stage will group
-        // documents together, discarding their text score and sort keys.
+        // documents together, discarding their text score, search score, and sort keys.
         EXHAUSTIVE_META = 0x4,
 
         // Later stages won't need either fields or metadata.
@@ -109,7 +109,7 @@ struct DepsTracker {
      * Represents a state where all metadata is available.
      */
     static constexpr auto kAllMetadataAvailable =
-        MetadataAvailable(kTextScore | kGeoNearDistance | kGeoNearPoint);
+        MetadataAvailable(kTextScore | kGeoNearDistance | kGeoNearPoint | kSearchScore);
 
     DepsTracker(MetadataAvailable metadataAvailable = kNoMetadata)
         : _metadataAvailable(metadataAvailable) {}
@@ -181,8 +181,7 @@ struct DepsTracker {
 
 private:
     /**
-     * Appends the meta projections for the sort key and/or text score to 'bb' if necessary. Returns
-     * true if either type of metadata was needed, and false otherwise.
+     * Appends the meta projections for the sort key and/or text and search score to 'bb' if necessary. Returns true if either type of metadata was needed, and false otherwise.
      */
     bool _appendMetaProjections(BSONObjBuilder* bb) const;
 

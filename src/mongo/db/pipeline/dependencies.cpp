@@ -126,7 +126,7 @@ BSONObj DepsTracker::toProjection() const {
 boost::optional<ParsedDeps> DepsTracker::toParsedDeps() const {
     MutableDocument md;
 
-    if (needWholeDocument || _needTextScore) {
+    if (needWholeDocument || _needTextScore || _needSearchScore) {
         // can't use ParsedDeps in this case
         return boost::none;
     }

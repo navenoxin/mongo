@@ -2679,10 +2679,6 @@ TEST_F(PipelineDependenciesTest, EmptyPipelineShouldRequireWholeDocument) {
     depsTracker = pipeline->getDependencies(DepsTracker::MetadataAvailable::kTextScore);
     ASSERT_TRUE(depsTracker.needWholeDocument);
     ASSERT_TRUE(depsTracker.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-
-    depsTracker = pipeline->getDependencies(DepsTracker::MetadataAvailable::kSearchScore);
-    ASSERT_TRUE(depsTracker.needWholeDocument);
-    ASSERT_TRUE(depsTracker.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 //
@@ -2902,20 +2898,6 @@ TEST_F(PipelineDependenciesTest, ShouldThrowIfSearchScoreIsNeededButNotPresent) 
 
     ASSERT_THROWS(pipeline->getDependencies(DepsTracker::MetadataAvailable::kNoMetadata),
                   AssertionException);
-}
-
-TEST_F(PipelineDependenciesTest,
-       ShouldRequireSearchScoreIfAvailableAndNoStageReturnsExhaustiveMeta) {
-    auto ctx = getExpCtx();
-    auto pipeline = unittest::assertGet(Pipeline::create({}, ctx));
-
-    auto depsTracker = pipeline->getDependencies(DepsTracker::MetadataAvailable::kSearchScore);
-    ASSERT_TRUE(depsTracker.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
-
-    auto needsASeeNext = DocumentSourceNeedsASeeNext::create();
-    pipeline = unittest::assertGet(Pipeline::create({needsASeeNext}, ctx));
-    depsTracker = pipeline->getDependencies(DepsTracker::MetadataAvailable::kSearchScore);
-    ASSERT_TRUE(depsTracker.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
 }
 
 TEST_F(PipelineDependenciesTest, ShouldNotRequireSearchScoreIfAvailableButDefinitelyNotNeeded) {
