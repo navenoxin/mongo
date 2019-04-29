@@ -601,6 +601,17 @@ DepsTracker Pipeline::getDependencies(DepsTracker::MetadataAvailable metadataAva
         deps.setNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE, false);
     }
 
+    if (metadataAvailable & DepsTracker::MetadataAvailable::kSearchScore) {
+        // If there is a text score, assume we need to keep it if we can't prove we don't. If we are
+        // the first half of a pipeline which has been split, future stages might need it.
+        if (!knowAllMeta) {
+            deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
+        }
+    } else {
+        // If there is no text score available, then we don't need to ask for it.
+        deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, false);
+    }
+
     return deps;
 }
 
