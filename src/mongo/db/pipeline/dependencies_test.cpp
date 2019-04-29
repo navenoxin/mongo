@@ -174,7 +174,7 @@ TEST(DependenciesToProjectionTest,
 }
 
 TEST(DependenciesToProjectionTest, ShouldAttemptToExcludeOtherFieldsIfOnlySearchScoreIsNeeded) {
-    DepsTracker deps(DepsTracker::MetadataAvailable::kTextScore);
+    DepsTracker deps(DepsTracker::MetadataAvailable::kSearchScore);
     deps.fields = {};
     deps.needWholeDocument = false;
     deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
