@@ -47,7 +47,7 @@ using std::string;
 static const BSONObj metaTextScore = BSON("$meta"
                                           << "textScore");
 static const BSONObj metaSearchScore = BSON("$meta"
-                                          << "searchScore");
+                                            << "searchScore");
 
 template <size_t ArrayLen>
 set<string> arrayToSet(const char* (&array)[ArrayLen]) {
@@ -180,8 +180,8 @@ TEST(DependenciesToProjectionTest, ShouldAttemptToExcludeOtherFieldsIfOnlySearch
     deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
     ASSERT_BSONOBJ_EQ(deps.toProjection(),
                       BSON(Document::metaFieldSearchScore << metaSearchScore << "_id" << 0
-                                                        << "$noFieldsNeeded"
-                                                        << 1));
+                                                          << "$noFieldsNeeded"
+                                                          << 1));
 }
 
 TEST(DependenciesToProjectionTest,
