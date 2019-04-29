@@ -322,6 +322,7 @@ Document Document::fromBsonWithMetaData(const BSONObj& bson) {
             if (fieldName == metaFieldTextScore) {
                 md.setTextScore(elem.Double());
                 continue;
+            }
             if (fieldName == metaFieldSearchScore) {
                 md.setSearchScore(elem.Double());
                 continue;

@@ -160,13 +160,15 @@ Status ParsedProjection::make(OperationContext* opCtx,
                 }
 
                 if (e2.valuestr() == QueryRequest::metaSearchScore) {
-                    return Status(ErrorCodes::BadValue, "searchScore is only a legal $meta operator in an aggregation pipeline");
+                    return Status(
+                        ErrorCodes::BadValue,
+                        "searchScore is only a legal $meta operator in an aggregation pipeline");
                 } else if (e2.valuestr() != QueryRequest::metaTextScore &&
-                    e2.valuestr() != QueryRequest::metaRecordId &&
-                    e2.valuestr() != QueryRequest::metaIndexKey &&
-                    e2.valuestr() != QueryRequest::metaGeoNearDistance &&
-                    e2.valuestr() != QueryRequest::metaGeoNearPoint &&
-                    e2.valuestr() != QueryRequest::metaSortKey) {
+                           e2.valuestr() != QueryRequest::metaRecordId &&
+                           e2.valuestr() != QueryRequest::metaIndexKey &&
+                           e2.valuestr() != QueryRequest::metaGeoNearDistance &&
+                           e2.valuestr() != QueryRequest::metaGeoNearPoint &&
+                           e2.valuestr() != QueryRequest::metaSortKey) {
                     return Status(ErrorCodes::BadValue, "unsupported $meta operator: " + e2.str());
                 }
 
