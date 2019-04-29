@@ -122,7 +122,7 @@ struct DepsTracker {
     boost::optional<ParsedDeps> toParsedDeps() const;
 
     bool hasNoRequirements() const {
-        return fields.empty() && !needWholeDocument && !_needTextScore;
+        return fields.empty() && !needWholeDocument && !_needTextScore && !_needSearchScore;
     }
 
     /**
@@ -166,7 +166,8 @@ struct DepsTracker {
      * Returns true if there exists a type of metadata required by the DepsTracker.
      */
     bool getNeedsAnyMetadata() const {
-        return _needTextScore || _needSortKey || _needGeoNearDistance || _needGeoNearPoint;
+        return _needTextScore || _needSortKey || _needGeoNearDistance || _needGeoNearPoint ||
+            _needSearchScore;
     }
 
     /**

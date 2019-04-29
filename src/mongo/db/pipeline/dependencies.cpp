@@ -59,7 +59,13 @@ bool DepsTracker::_appendMetaProjections(BSONObjBuilder* projectionBuilder) cons
                                   BSON("$meta"
                                        << "geoNearPoint"));
     }
-    return (_needTextScore || _needSortKey || _needGeoNearDistance || _needGeoNearPoint);
+    if (_needSearchScore) {
+        projectionBuilder->append(Document::metaFieldSearchScore,
+                                  BSON("$meta"
+                                       << "searchScore"));
+    }
+    return (_needTextScore || _needSortKey || _needGeoNearDistance || _needGeoNearPoint ||
+            _needSearchScore);
 }
 
 BSONObj DepsTracker::toProjection() const {
@@ -204,7 +210,7 @@ void DepsTracker::setNeedsMetadata(MetadataType type, bool required) {
                 31070,
                 "pipeline requires search score metadata, but there is no search score available",
                 !required || isMetadataAvailable(type));
-            _needTextScore = required;
+            _needSearchScore = required;
             return;
     }
     MONGO_UNREACHABLE;
