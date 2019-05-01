@@ -181,7 +181,8 @@ struct DepsTracker {
 
 private:
     /**
-     * Appends the meta projections for the sort key and/or text and search score to 'bb' if necessary. Returns true if either type of metadata was needed, and false otherwise.
+     * Appends the meta projections for the sort key and/or text and search score to 'bb' if
+     * necessary. Returns true if either type of metadata was needed, and false otherwise.
      */
     bool _appendMetaProjections(BSONObjBuilder* bb) const;
 
