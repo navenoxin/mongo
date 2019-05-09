@@ -161,7 +161,7 @@ Status ParsedProjection::make(OperationContext* opCtx,
 
                 if (e2.valuestr() == QueryRequest::metaSearchScore) {
                     return Status(
-                        ErrorCodes::BadValue,
+                        ErrorCodes::Error(31105),
                         "searchScore is only a legal $meta operator in an aggregation pipeline");
                 } else if (e2.valuestr() != QueryRequest::metaTextScore &&
                            e2.valuestr() != QueryRequest::metaRecordId &&
