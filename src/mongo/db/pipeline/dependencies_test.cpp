@@ -162,35 +162,21 @@ TEST(DependenciesToProjectionTest,
     ASSERT_BSONOBJ_EQ(deps.toProjection(), BSON(Document::metaFieldTextScore << metaTextScore));
 }
 
-TEST(DependenciesToProjectionTest,
-     ShouldRequireFieldsAndSearchScoreIfSearchScoreNeededWithoutWholeDocument) {
-    const char* array[] = {"a"};  // needSearchScore without needWholeDocument
-    DepsTracker deps(DepsTracker::MetadataAvailable::kSearchScore);
-    deps.fields = arrayToSet(array);
-    deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
-    ASSERT_BSONOBJ_EQ(
-        deps.toProjection(),
-        BSON(Document::metaFieldSearchScore << metaSearchScore << "a" << 1 << "_id" << 0));
+TEST(DependenciesToProjectionTest, ThrowsIfSearchScoreMetadataRequiredAndNotMarkedAsAvailable) {
+    DepsTracker deps(DepsTracker::MetadataAvailable::kNoMetadata);
+    deps.fields = {};
+    ASSERT_THROWS_CODE(deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true),
+                       AssertionException,
+                       31070);
 }
 
-TEST(DependenciesToProjectionTest, ShouldAttemptToExcludeOtherFieldsIfOnlySearchScoreIsNeeded) {
+TEST(DependenciesToProjectionTest, GetNeedsMetaWorksForSearchScore) {
     DepsTracker deps(DepsTracker::MetadataAvailable::kSearchScore);
-    deps.fields = {};
-    deps.needWholeDocument = false;
     deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
     ASSERT_BSONOBJ_EQ(deps.toProjection(),
                       BSON(Document::metaFieldSearchScore << metaSearchScore << "_id" << 0
                                                           << "$noFieldsNeeded"
                                                           << 1));
-}
-
-TEST(DependenciesToProjectionTest,
-     ShouldRequireSearchScoreIfNoFieldsPresentButWholeDocumentIsNeeded) {
-    DepsTracker deps(DepsTracker::MetadataAvailable::kSearchScore);
-    deps.fields = {};
-    deps.needWholeDocument = true;
-    deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
-    ASSERT_BSONOBJ_EQ(deps.toProjection(), BSON(Document::metaFieldSearchScore << metaSearchScore));
 }
 
 }  // namespace

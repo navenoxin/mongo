@@ -2899,7 +2899,7 @@ TEST_F(PipelineDependenciesTest, ShouldThrowIfSearchScoreIsNeededButNotPresent) 
 
     ASSERT_THROWS_CODE(pipeline->getDependencies(DepsTracker::MetadataAvailable::kNoMetadata),
                        AssertionException,
-                       1234);
+                       31070);
 }
 
 TEST_F(PipelineDependenciesTest, ShouldNotRequireSearchScoreIfAvailableButDefinitelyNotNeeded) {
