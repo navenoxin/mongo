@@ -61,7 +61,7 @@ struct DepsTracker {
         EXHAUSTIVE_FIELDS = 0x2,
 
         // Later stages won't need more metadata from input. For example, a $group stage will group
-        // documents together, discarding their text score, search score, and sort keys.
+        // documents together, discarding all metadata (e.g. the text score or sort key metadata).
         EXHAUSTIVE_META = 0x4,
 
         // Later stages won't need either fields or metadata.
@@ -84,7 +84,7 @@ struct DepsTracker {
         // The point used in the computation of the GEO_NEAR_DISTANCE.
         GEO_NEAR_POINT,
 
-        // The score associated with a searchBeta match.
+        // The score associated with a $searchBeta stage.
         SEARCH_SCORE,
     };
 
@@ -122,7 +122,7 @@ struct DepsTracker {
     boost::optional<ParsedDeps> toParsedDeps() const;
 
     bool hasNoRequirements() const {
-        return fields.empty() && !needWholeDocument && !_needTextScore && !_needSearchScore;
+        return fields.empty() && !needWholeDocument && !_needTextScore;
     }
 
     /**
@@ -181,8 +181,8 @@ struct DepsTracker {
 
 private:
     /**
-     * Appends the meta projections for the sort key and/or text and search score to 'bb' if
-     * necessary. Returns true if either type of metadata was needed, and false otherwise.
+     * Appends $meta projections to 'bb' depending on what kind of metadata is needed. Returns true
+     * if any type of metadata is needed, and false otherwise.
      */
     bool _appendMetaProjections(BSONObjBuilder* bb) const;
 

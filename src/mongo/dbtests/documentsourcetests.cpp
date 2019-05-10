@@ -64,8 +64,6 @@ using std::vector;
 static const NamespaceString nss("unittests.documentsourcetests");
 static const BSONObj metaTextScore = BSON("$meta"
                                           << "textScore");
-static const BSONObj metaSearchScore = BSON("$meta"
-                                            << "searchScore");
 
 BSONObj toBson(const intrusive_ptr<DocumentSource>& source) {
     vector<Value> arr;

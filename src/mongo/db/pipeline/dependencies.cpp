@@ -64,8 +64,7 @@ bool DepsTracker::_appendMetaProjections(BSONObjBuilder* projectionBuilder) cons
                                   BSON("$meta"
                                        << "searchScore"));
     }
-    return (_needTextScore || _needSortKey || _needGeoNearDistance || _needGeoNearPoint ||
-            _needSearchScore);
+    return getNeedsAnyMetadata();
 }
 
 BSONObj DepsTracker::toProjection() const {
@@ -126,7 +125,7 @@ BSONObj DepsTracker::toProjection() const {
 boost::optional<ParsedDeps> DepsTracker::toParsedDeps() const {
     MutableDocument md;
 
-    if (needWholeDocument || _needTextScore || _needSearchScore) {
+    if (needWholeDocument || _needTextScore) {
         // can't use ParsedDeps in this case
         return boost::none;
     }

@@ -2883,7 +2883,8 @@ TEST_F(PipelineDependenciesTest, ShouldNotRequireTextScoreIfAvailableButDefinite
     ASSERT_FALSE(depsTracker.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
 }
 
-TEST_F(PipelineDependenciesTest, ShouldNotRequireSearchScoreIfThereIsNoSearchScoreAvailable) {
+TEST_F(PipelineDependenciesTest,
+       DoesNotNeedSearchScoreMetadataIfNoStageHasSearchScoreMetaProjection) {
     auto ctx = getExpCtx();
     auto pipeline = unittest::assertGet(Pipeline::create({}, ctx));
 
@@ -2896,8 +2897,9 @@ TEST_F(PipelineDependenciesTest, ShouldThrowIfSearchScoreIsNeededButNotPresent) 
     auto needsSearchScore = DocumentSourceNeedsOnlySearchScore::create();
     auto pipeline = unittest::assertGet(Pipeline::create({needsSearchScore}, ctx));
 
-    ASSERT_THROWS(pipeline->getDependencies(DepsTracker::MetadataAvailable::kNoMetadata),
-                  AssertionException);
+    ASSERT_THROWS_CODE(pipeline->getDependencies(DepsTracker::MetadataAvailable::kNoMetadata),
+                       AssertionException,
+                       1234);
 }
 
 TEST_F(PipelineDependenciesTest, ShouldNotRequireSearchScoreIfAvailableButDefinitelyNotNeeded) {
