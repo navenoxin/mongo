@@ -159,16 +159,12 @@ Status ParsedProjection::make(OperationContext* opCtx,
                     return Status(ErrorCodes::BadValue, "unexpected argument to $meta in proj");
                 }
 
-                if (e2.valuestr() == QueryRequest::metaSearchScore) {
-                    return Status(
-                        ErrorCodes::Error(31105),
-                        "searchScore is only a legal $meta operator in an aggregation pipeline");
-                } else if (e2.valuestr() != QueryRequest::metaTextScore &&
-                           e2.valuestr() != QueryRequest::metaRecordId &&
-                           e2.valuestr() != QueryRequest::metaIndexKey &&
-                           e2.valuestr() != QueryRequest::metaGeoNearDistance &&
-                           e2.valuestr() != QueryRequest::metaGeoNearPoint &&
-                           e2.valuestr() != QueryRequest::metaSortKey) {
+                if (e2.valuestr() != QueryRequest::metaTextScore &&
+                    e2.valuestr() != QueryRequest::metaRecordId &&
+                    e2.valuestr() != QueryRequest::metaIndexKey &&
+                    e2.valuestr() != QueryRequest::metaGeoNearDistance &&
+                    e2.valuestr() != QueryRequest::metaGeoNearPoint &&
+                    e2.valuestr() != QueryRequest::metaSortKey) {
                     return Status(ErrorCodes::BadValue, "unsupported $meta operator: " + e2.str());
                 }
 
@@ -183,6 +179,10 @@ Status ParsedProjection::make(OperationContext* opCtx,
                     wantGeoNearPoint = true;
                 } else if (e2.valuestr() == QueryRequest::metaSortKey) {
                     wantSortKey = true;
+                } else if (e2.valuestr() == QueryRequest::metaSearchScore) {
+                    return Status(
+                        ErrorCodes::Error(31105),
+                        "searchScore is only a legal $meta operator in an aggregation pipeline");
                 }
 
                 // Of the $meta projections, only sortKey can be covered.
