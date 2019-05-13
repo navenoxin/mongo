@@ -539,12 +539,12 @@ TEST_F(ChangeStreamStageTest, TransformInsertDocKeyJustId) {
 
 TEST_F(ChangeStreamStageTest, TransformInsertFromMigrate) {
     bool fromMigrate = true;
-    auto insert = makeOplogEntry(OpTypeEnum::kInsert,
-                                 nss,
-                                 BSON("_id" << 1 << "x" << 1),
-                                 boost::none,
-                                 fromMigrate,
-                                 boost::none);
+    auto insert = makeOplogEntry(OpTypeEnum::kInsert,           // op type
+                                 nss,                           // namespace
+                                 BSON("_id" << 1 << "x" << 1),  // o
+                                 boost::none,                   // uuid
+                                 fromMigrate,                   // fromMigrate
+                                 boost::none);                  // o2
 
     checkTransformation(insert, boost::none);
 }
