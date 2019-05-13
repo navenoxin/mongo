@@ -46,8 +46,6 @@ using std::string;
 
 static const BSONObj metaTextScore = BSON("$meta"
                                           << "textScore");
-static const BSONObj metaSearchScore = BSON("$meta"
-                                            << "searchScore");
 
 template <size_t ArrayLen>
 set<string> arrayToSet(const char* (&array)[ArrayLen]) {
@@ -160,23 +158,6 @@ TEST(DependenciesToProjectionTest,
     deps.needWholeDocument = true;
     deps.setNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE, true);
     ASSERT_BSONOBJ_EQ(deps.toProjection(), BSON(Document::metaFieldTextScore << metaTextScore));
-}
-
-TEST(DependenciesToProjectionTest, ThrowsIfSearchScoreMetadataRequiredAndNotMarkedAsAvailable) {
-    DepsTracker deps(DepsTracker::MetadataAvailable::kNoMetadata);
-    deps.fields = {};
-    ASSERT_THROWS_CODE(deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true),
-                       AssertionException,
-                       31070);
-}
-
-TEST(DependenciesToProjectionTest, GetNeedsMetaWorksForSearchScore) {
-    DepsTracker deps(DepsTracker::MetadataAvailable::kSearchScore);
-    deps.setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
-    ASSERT_BSONOBJ_EQ(deps.toProjection(),
-                      BSON(Document::metaFieldSearchScore << metaSearchScore << "_id" << 0
-                                                          << "$noFieldsNeeded"
-                                                          << 1));
 }
 
 }  // namespace

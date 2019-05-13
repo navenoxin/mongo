@@ -61,7 +61,7 @@ struct DepsTracker {
         EXHAUSTIVE_FIELDS = 0x2,
 
         // Later stages won't need more metadata from input. For example, a $group stage will group
-        // documents together, discarding all metadata (e.g. the text score or sort key metadata).
+        // documents together, discarding their text score and sort keys.
         EXHAUSTIVE_META = 0x4,
 
         // Later stages won't need either fields or metadata.
@@ -83,9 +83,6 @@ struct DepsTracker {
 
         // The point used in the computation of the GEO_NEAR_DISTANCE.
         GEO_NEAR_POINT,
-
-        // The score associated with a $searchBeta stage.
-        SEARCH_SCORE,
     };
 
     /**
@@ -96,7 +93,6 @@ struct DepsTracker {
         kTextScore = 1 << 1,
         kGeoNearDistance = 1 << 2,
         kGeoNearPoint = 1 << 3,
-        kSearchScore = 1 << 4,
     };
 
     /**
@@ -109,7 +105,7 @@ struct DepsTracker {
      * Represents a state where all metadata is available.
      */
     static constexpr auto kAllMetadataAvailable =
-        MetadataAvailable(kTextScore | kGeoNearDistance | kGeoNearPoint | kSearchScore);
+        MetadataAvailable(kTextScore | kGeoNearDistance | kGeoNearPoint);
 
     DepsTracker(MetadataAvailable metadataAvailable = kNoMetadata)
         : _metadataAvailable(metadataAvailable) {}
@@ -166,8 +162,7 @@ struct DepsTracker {
      * Returns true if there exists a type of metadata required by the DepsTracker.
      */
     bool getNeedsAnyMetadata() const {
-        return _needTextScore || _needSortKey || _needGeoNearDistance || _needGeoNearPoint ||
-            _needSearchScore;
+        return _needTextScore || _needSortKey || _needGeoNearDistance || _needGeoNearPoint;
     }
 
     /**
@@ -181,8 +176,8 @@ struct DepsTracker {
 
 private:
     /**
-     * Appends $meta projections to 'bb' depending on what kind of metadata is needed. Returns true
-     * if any type of metadata is needed, and false otherwise.
+     * Appends the meta projections for the sort key and/or text score to 'bb' if necessary. Returns
+     * true if either type of metadata was needed, and false otherwise.
      */
     bool _appendMetaProjections(BSONObjBuilder* bb) const;
 
@@ -193,7 +188,6 @@ private:
     bool _needSortKey = false;          // {$meta: "sortKey"}
     bool _needGeoNearDistance = false;  // {$meta: "geoNearDistance"}
     bool _needGeoNearPoint = false;     // {$meta: "geoNearPoint"}
-    bool _needSearchScore = false;      // {$meta: "searchScore"}
 };
 
 /**

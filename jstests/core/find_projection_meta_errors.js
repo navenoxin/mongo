@@ -1,4 +1,4 @@
-// Basic tests for errors when parsing metadata projections.
+// Basic tests for errors when parsing the $meta projection.
 
 (function() {
     "use strict";

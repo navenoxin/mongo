@@ -2558,8 +2558,6 @@ Value ExpressionMeta::evaluate(const Document& root) const {
 void ExpressionMeta::_doAddDependencies(DepsTracker* deps) const {
     if (_metaType == MetaType::TEXT_SCORE) {
         deps->setNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE, true);
-    } else if (_metaType == MetaType::SEARCH_SCORE) {
-        deps->setNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE, true);
     }
 }
 

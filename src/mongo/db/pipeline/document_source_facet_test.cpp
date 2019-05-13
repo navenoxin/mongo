@@ -616,7 +616,6 @@ TEST_F(DocumentSourceFacetTest, ShouldUnionDependenciesOfInnerPipelines) {
     ASSERT_EQ(facetStage->getDependencies(&deps), DepsTracker::State::EXHAUSTIVE_ALL);
     ASSERT_FALSE(deps.needWholeDocument);
     ASSERT_FALSE(deps.getNeedsMetadata(DepsTracker::MetadataType::TEXT_SCORE));
-    ASSERT_FALSE(deps.getNeedsMetadata(DepsTracker::MetadataType::SEARCH_SCORE));
     ASSERT_EQ(deps.fields.size(), 2UL);
     ASSERT_EQ(deps.fields.count("a"), 1UL);
     ASSERT_EQ(deps.fields.count("b"), 1UL);
