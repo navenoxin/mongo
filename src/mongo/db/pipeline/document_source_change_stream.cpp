@@ -254,7 +254,8 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
                                 << "c"
                                 << OR(commandsOnTargetDb, renameDropTarget, transactionCommit));
 
-    // Match the operation namespace.
+    // 2) Supported operations on the operation namespace, optionally including those from
+    // migrations.
     BSONObj opNsMatch = BSON("ns" << BSONRegEx(getNsRegexForChangeStream(nss)));
 
     // 2.1) Normal CRUD ops.
@@ -273,8 +274,6 @@ BSONObj DocumentSourceChangeStream::buildMatchFilter(
     // Filter excluding entries resulting from chunk migration.
     BSONObj notFromMigrateFilter = BSON("fromMigrate" << NE << true);
 
-    // 2) Supported operations on the operation namespace, optionally including those from
-    // migrations.
     BSONObj opMatch =
         (showMigrationEvents
              ? normalOrChunkMigratedMatch

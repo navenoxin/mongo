@@ -1,28 +1,30 @@
 // Tests that change stream returns the stream of results continuously and in the right order when
-// it's migrating a chunk to a new shard.
+// it's migrating a chunk to a new shard. Also tests the undocumented 'showChunkMigrations' option.
 // @tags: [uses_change_streams]
-
-var checkEvents = function(changeStream, expectedEvents) {
-    expectedEvents.forEach((event) => {
-        assert.soon(() => changeStream.hasNext());
-        let next = changeStream.next();
-        jsTestLog(tojson(next) + " should equal " + tojson(event));
-        assert.eq(next.operationType, event["operationType"]);
-        assert.eq(next.documentKey, {_id: event["_id"]});
-    });
-};
-
-var makeEvent = function(docId, opType) {
-    assert(typeof docId === 'number');
-    assert(typeof opType === 'string' && (opType === 'insert' || opType === 'delete'));
-    return ({_id: docId, operationType: opType});
-};
 
 (function() {
     'use strict';
 
     // For supportsMajorityReadConcern().
     load("jstests/multiVersion/libs/causal_consistency_helpers.js");
+
+    function checkEvents(changeStream, expectedEvents) {
+        expectedEvents.forEach((event) => {
+            jsTestLog("Waiting for\n" + tojson(event) + "\n to happen...");
+            assert.soon(() => changeStream.hasNext());
+            let next = changeStream.next();
+            // TODO TODO TODO remove after done
+            jsTestLog(tojson(next) + " should equal " + tojson(event));
+            assert.eq(next.operationType, event["operationType"]);
+            assert.eq(next.documentKey, {_id: event["_id"]});
+        });
+    };
+
+    function makeEvent(docId, opType) {
+        assert(typeof docId === 'number');
+        assert(typeof opType === 'string' && (opType === 'insert' || opType === 'delete'));
+        return ({_id: docId, operationType: opType});
+    };
 
     if (!supportsMajorityReadConcern()) {
         jsTestLog("Skipping test since storage engine doesn't support majority read concern.");
@@ -54,6 +56,10 @@ var makeEvent = function(docId, opType) {
 
     // Open a change stream cursor before the collection is sharded.
     const changeStream = mongosColl.aggregate([{$changeStream: {}}]);
+
+    const changeStreamMongosShowMigrations = st.s.getCollection('test.foo').aggregate([
+        {$changeStream: {showMigrationEvents: true}}
+    ]);
     const changeStreamShardZero = st.shard0.getCollection('test.foo').aggregate([
         {$changeStream: {showMigrationEvents: true}}
     ]);
@@ -62,6 +68,7 @@ var makeEvent = function(docId, opType) {
     ]);
 
     assert(!changeStream.hasNext(), "Do not expect any results yet");
+    assert(!changeStreamMongosShowMigrations.hasNext(), "Do not expect any results yet");
     assert(!changeStreamShardZero.hasNext(), "Do not expect any results yet");
     assert(!changeStreamShardOne.hasNext(), "Do not expect any results yet");
 
@@ -86,6 +93,7 @@ var makeEvent = function(docId, opType) {
     }));
 
     var mongosEvents = [makeEvent(0, "insert"), makeEvent(20, "insert")];
+    var mongosEventsWithMigratesBeforeNewShard = [...mongosEvents];
     var shardZeroEventsBeforeNewShard = [...mongosEvents];
     var shardZeroEventsAfterNewShard = [
         makeEvent(20, "delete"),
@@ -93,15 +101,21 @@ var makeEvent = function(docId, opType) {
     var shardOneEvents = [
         makeEvent(20, "insert"),
     ];
+    var mongosEventsWithMigratesAfterNewShard = [
+        ...shardOneEvents,
+        ...shardZeroEventsAfterNewShard,
+    ];
 
     // Check that each change stream returns the expected events.
     checkEvents(changeStream, mongosEvents);
+    checkEvents(changeStreamMongosShowMigrations, mongosEventsWithMigratesBeforeNewShard);
     checkEvents(changeStreamShardZero, shardZeroEventsBeforeNewShard);
     assert.soon(() => changeStreamShardZero.hasNext());
     let next = changeStreamShardZero.next();
     assert.eq(next.operationType, "kNewShardDetected");
-    checkEvents(changeStreamShardZero, shardZeroEventsAfterNewShard);
 
+    checkEvents(changeStreamMongosShowMigrations, mongosEventsWithMigratesAfterNewShard);
+    checkEvents(changeStreamShardZero, shardZeroEventsAfterNewShard);
     checkEvents(changeStreamShardOne, shardOneEvents);
 
     // Insert into both the chunks.
@@ -144,14 +158,22 @@ var makeEvent = function(docId, opType) {
         makeEvent(2, "insert"),
         makeEvent(22, "insert"),
     ];
+    var mongosEventsWithMigrates = [
+        ...shardZeroEvents.slice(0,1),
+        ...shardOneEvents.slice(0,3),
+        ...shardZeroEvents.slice(1),
+        ...shardOneEvents.slice(4),
+    ];
 
     // Check that each change stream returns the expected events.
     checkEvents(changeStream, mongosEvents);
+    checkEvents(changeStream, mongosEventsWithMigrates);
     checkEvents(changeStreamShardZero, shardZeroEvents);
     checkEvents(changeStreamShardOne, shardOneEvents);
 
     // Make sure we're at the end of the stream.
     assert(!changeStream.hasNext());
+    assert(!changeStreamMongosShowMigrations.hasNext());
     assert(!changeStreamShardZero.hasNext());
     assert(!changeStreamShardOne.hasNext());
 
@@ -200,10 +222,17 @@ var makeEvent = function(docId, opType) {
         makeEvent(4, "insert"),
         makeEvent(24, "insert"),
     ];
+    // mongosEventsWithMigrates = [
+    //     ...shardZeroEvents.slice(0,1),
+    //     ...shardOneEvents.slice(0,4),
+    //     ...shardZeroEvents.slice(1),
+    //     ...shardOneEvents.slice(5),
+    // ];
 
     checkEvents(changeStream, mongosEvents);
     checkEvents(changeStreamShardZero, shardZeroEvents);
     checkEvents(changeStreamShardOne, shardOneEvents);
+    // checkEvents(changeStream, mongosEventsWithMigrates);
 
     // Now test that adding a new shard and migrating a chunk to it will continue to
     // return the correct results.
@@ -229,7 +258,9 @@ var makeEvent = function(docId, opType) {
 
     checkEvents(changeStream, mongosEvents);
     assert(!changeStreamShardZero.hasNext(), "Do not expect any results");
-    checkEvents(changeStreamShardOne, mongosEvents);
+
+    shardOneEvents = mongosEvents; // All of the above inserts went to shard 1.
+    checkEvents(changeStreamShardOne, shardOneEvents);
     assert(!changeStreamNewShard.hasNext(), "Do not expect any results yet");
 
     assert.writeOK(mongosColl.insert({_id: 16}, {writeConcern: {w: "majority"}}));
@@ -290,6 +321,7 @@ var makeEvent = function(docId, opType) {
 
     // Make sure all change streams are empty.
     assert(!changeStream.hasNext());
+    assert(!changeStreamMongosShowMigrations.hasNext());
     assert(!changeStreamShardZero.hasNext());
     assert(!changeStreamShardOne.hasNext());
     assert(!changeStreamNewShard.hasNext());
