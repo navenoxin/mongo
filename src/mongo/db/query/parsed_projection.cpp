@@ -179,10 +179,6 @@ Status ParsedProjection::make(OperationContext* opCtx,
                     wantGeoNearPoint = true;
                 } else if (e2.valuestr() == QueryRequest::metaSortKey) {
                     wantSortKey = true;
-                } else if (e2.valuestr() == QueryRequest::metaSearchScore) {
-                    return Status(
-                        ErrorCodes::Error(31105),
-                        "searchScore is only a legal $meta operator in an aggregation pipeline");
                 }
 
                 // Of the $meta projections, only sortKey can be covered.

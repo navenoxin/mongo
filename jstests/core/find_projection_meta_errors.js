@@ -10,7 +10,8 @@
     assert.commandWorked(coll.insert({a: 2}));
 
     assert.commandFailedWithCode(
-        db.runCommand({find: coll.getName(), projection: {score: {$meta: "searchScore"}}}), 31105);
+        db.runCommand({find: coll.getName(), projection: {score: {$meta: "searchScore"}}}),
+        ErrorCodes.BadValue);
 
     assert.commandFailedWithCode(
         db.runCommand({find: coll.getName(), projection: {score: {$meta: "some garbage"}}}),
