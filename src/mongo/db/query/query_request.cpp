@@ -62,9 +62,6 @@ const string QueryRequest::metaRecordId("recordId");
 const string QueryRequest::metaSortKey("sortKey");
 const string QueryRequest::metaTextScore("textScore");
 
-// searchScore is only a legal $meta operator in an aggregation pipeline.
-const string QueryRequest::metaSearchScore("searchScore");
-
 const long long QueryRequest::kDefaultBatchSize = 101;
 
 namespace {
