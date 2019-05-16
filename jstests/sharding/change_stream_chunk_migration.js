@@ -10,7 +10,6 @@
 
     function checkEvents(changeStream, expectedEvents) {
         expectedEvents.forEach((event) => {
-            jsTestLog("Waiting for\n" + tojson(event) + "\n to happen...");
             assert.soon(() => changeStream.hasNext());
             let next = changeStream.next();
             assert.eq(next.operationType, event["operationType"]);
@@ -319,10 +318,34 @@
     ];
     mongosEventsWithMigrates = [
         makeEvent(16, "insert"),
-        // A changestream opened against mongos with showMigrations flag will miss insertions from
-        // a chunk migration to a new shard. They will pick up insertions to that chunk after the first
-        // insertion. TODO chat about this, this seems like a an issue.
-        makeEvent(16, "delete"), // should insert all these first
+        /**
+         * A change stream opened against mongos with showMigrations flag will miss insertions from
+         * a chunk migration to a new shard. They will pick up insertions to that chunk (including
+         * those related to other chunk migrations) after the migration commit time.
+         *
+         * Some interesting reading from the change notification API (unsure how accurate/up to date
+         * this document is, FWIW last edit was 10/18)
+         * https://docs.google.com/document/d/1BbNvaFCheeyEiHn4klbClOMAcaReHfQRV7myspnMDEY/edit?ts=58b0b48d#heading=h.3ulf57uxlq6h
+         *
+         * The part from that that I thought was relevant was the section describing how a no-op
+         * oplog entry is added to a donor shard *before the migration commit time* so that any
+         * existing change streams add their 'retryNeeded' entry and force a shard registry reload
+         * before reopening.
+         *
+         * Because the mechanism that forces the reload is only guaranteed to be before the
+         * migration commit time, we will not be able to guarantee writes from the migration itself.
+         *
+         * The commented out inserts below do happen on the new shard here, but are not seen by our
+         * change stream.
+         */
+        // makeEvent(16, "insert"),
+        // makeEvent(20, "insert"),
+        // makeEvent(21, "insert"),
+        // makeEvent(22, "insert"),
+        // makeEvent(23, "insert"),
+        // makeEvent(24, "insert"),
+        // makeEvent(25, "insert"),
+        makeEvent(16, "delete"),  // deletes related to chunk migration
         makeEvent(20, "delete"),
         makeEvent(21, "delete"),
         makeEvent(22, "delete"),
@@ -331,7 +354,7 @@
         makeEvent(25, "delete"),
         makeEvent(-6, "insert"),
         makeEvent(6, "insert"),
-        makeEvent(26, "insert"),  // surprising that this is here given none of the other new shard events are.
+        makeEvent(26, "insert"),
     ];
 
     // Check that each change stream returns the expected events.
