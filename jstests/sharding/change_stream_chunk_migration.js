@@ -13,8 +13,6 @@
             jsTestLog("Waiting for\n" + tojson(event) + "\n to happen...");
             assert.soon(() => changeStream.hasNext());
             let next = changeStream.next();
-            // TODO TODO TODO remove after done
-            jsTestLog(tojson(next) + " should equal " + tojson(event));
             assert.eq(next.operationType, event["operationType"]);
             assert.eq(next.documentKey, {_id: event["_id"]});
         });
@@ -321,13 +319,10 @@
     ];
     mongosEventsWithMigrates = [
         makeEvent(16, "insert"),
-        // makeEvent(20, "insert"),
-        // makeEvent(21, "insert"),
-        // makeEvent(22, "insert"),
-        // makeEvent(23, "insert"),
-        // makeEvent(24, "insert"),
-        // makeEvent(25, "insert"),
-        makeEvent(16, "delete"),
+        // A changestream opened against mongos with showMigrations flag will miss insertions from
+        // a chunk migration to a new shard. They will pick up insertions to that chunk after the first
+        // insertion. TODO chat about this, this seems like a an issue.
+        makeEvent(16, "delete"), // should insert all these first
         makeEvent(20, "delete"),
         makeEvent(21, "delete"),
         makeEvent(22, "delete"),
@@ -336,11 +331,8 @@
         makeEvent(25, "delete"),
         makeEvent(-6, "insert"),
         makeEvent(6, "insert"),
-        makeEvent(26, "insert"),  // THIS IS WEIRD!!!
+        makeEvent(26, "insert"),  // surprising that this is here given none of the other new shard events are.
     ];
-
-    // A changestream opened against mongos with showMigrations flag will miss insertions from
-    // a chunk migration to a new shard. They will pick up insertions to that chunk in general.
 
     // Check that each change stream returns the expected events.
     checkEvents(changeStream, mongosEvents);
