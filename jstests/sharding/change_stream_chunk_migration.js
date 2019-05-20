@@ -53,9 +53,6 @@
 
     // Open a change stream cursor before the collection is sharded.
     const changeStream = mongosColl.aggregate([{$changeStream: {}}]);
-
-    const changeStreamMongosShowMigrations =
-        st.s.getCollection('test.foo').aggregate([{$changeStream: {showMigrationEvents: true}}]);
     const changeStreamShardZero = st.shard0.getCollection('test.foo').aggregate([
         {$changeStream: {showMigrationEvents: true}}
     ]);
@@ -64,7 +61,6 @@
     ]);
 
     assert(!changeStream.hasNext(), "Do not expect any results yet");
-    assert(!changeStreamMongosShowMigrations.hasNext(), "Do not expect any results yet");
     assert(!changeStreamShardZero.hasNext(), "Do not expect any results yet");
     assert(!changeStreamShardOne.hasNext(), "Do not expect any results yet");
 
@@ -89,7 +85,6 @@
     }));
 
     var mongosEvents = [makeEvent(0, "insert"), makeEvent(20, "insert")];
-    var mongosEventsWithMigratesBeforeNewShard = [...mongosEvents];
     var shardZeroEventsBeforeNewShard = [...mongosEvents];
     var shardZeroEventsAfterNewShard = [
         makeEvent(20, "delete"),
@@ -104,13 +99,11 @@
 
     // Check that each change stream returns the expected events.
     checkEvents(changeStream, mongosEvents);
-    checkEvents(changeStreamMongosShowMigrations, mongosEventsWithMigratesBeforeNewShard);
     checkEvents(changeStreamShardZero, shardZeroEventsBeforeNewShard);
     assert.soon(() => changeStreamShardZero.hasNext());
     let next = changeStreamShardZero.next();
     assert.eq(next.operationType, "kNewShardDetected");
 
-    checkEvents(changeStreamMongosShowMigrations, mongosEventsWithMigratesAfterNewShard);
     checkEvents(changeStreamShardZero, shardZeroEventsAfterNewShard);
     checkEvents(changeStreamShardOne, shardOneEvents);
 
@@ -154,27 +147,14 @@
         makeEvent(2, "insert"),
         makeEvent(22, "insert"),
     ];
-    var mongosEventsWithMigrates = [
-        makeEvent(1, "insert"),
-        makeEvent(21, "insert"),
-        makeEvent(0, "insert"),
-        makeEvent(1, "insert"),
-        makeEvent(0, "delete"),
-        makeEvent(1, "delete"),
-        makeEvent(-2, "insert"),
-        makeEvent(2, "insert"),
-        makeEvent(22, "insert"),
-    ];
 
     // Check that each change stream returns the expected events.
     checkEvents(changeStream, mongosEvents);
-    checkEvents(changeStreamMongosShowMigrations, mongosEventsWithMigrates);
     checkEvents(changeStreamShardZero, shardZeroEvents);
     checkEvents(changeStreamShardOne, shardOneEvents);
 
     // Make sure we're at the end of the stream.
     assert(!changeStream.hasNext());
-    assert(!changeStreamMongosShowMigrations.hasNext());
     assert(!changeStreamShardZero.hasNext());
     assert(!changeStreamShardOne.hasNext());
 
@@ -223,21 +203,8 @@
         makeEvent(4, "insert"),
         makeEvent(24, "insert"),
     ];
-    mongosEventsWithMigrates = [
-        makeEvent(-3, "insert"),
-        makeEvent(3, "insert"),
-        makeEvent(23, "insert"),
-        makeEvent(-2, "insert"),
-        makeEvent(-3, "insert"),
-        makeEvent(-3, "delete"),
-        makeEvent(-2, "delete"),
-        makeEvent(-4, "insert"),
-        makeEvent(4, "insert"),
-        makeEvent(24, "insert"),
-    ];
 
     checkEvents(changeStream, mongosEvents);
-    checkEvents(changeStreamMongosShowMigrations, mongosEventsWithMigrates);
     checkEvents(changeStreamShardZero, shardZeroEvents);
     checkEvents(changeStreamShardOne, shardOneEvents);
 
@@ -262,11 +229,9 @@
         makeEvent(5, "insert"),
         makeEvent(25, "insert"),
     ];
-    mongosEventsWithMigrates = mongosEvents;  // There are no events from migrations.
-    shardOneEvents = mongosEvents;            // All of the above inserts went to shard 1.
+    shardOneEvents = mongosEvents;  // All of the above inserts went to shard 1.
 
     checkEvents(changeStream, mongosEvents);
-    checkEvents(changeStreamMongosShowMigrations, mongosEventsWithMigrates);
     assert(!changeStreamShardZero.hasNext(), "Do not expect any results");
     checkEvents(changeStreamShardOne, shardOneEvents);
     assert(!changeStreamNewShard.hasNext(), "Do not expect any results yet");
@@ -316,50 +281,9 @@
         makeEvent(16, "insert"),
         makeEvent(26, "insert"),
     ];
-    mongosEventsWithMigrates = [
-        makeEvent(16, "insert"),
-        /**
-         * A change stream opened against mongos with showMigrations flag will miss insertions from
-         * a chunk migration to a new shard. They will pick up insertions to that chunk (including
-         * those related to other chunk migrations) after the migration commit time.
-         *
-         * Some interesting reading from the change notification API (unsure how accurate/up to date
-         * this document is, FWIW last edit was 10/18)
-         * https://docs.google.com/document/d/1BbNvaFCheeyEiHn4klbClOMAcaReHfQRV7myspnMDEY/edit?ts=58b0b48d#heading=h.3ulf57uxlq6h
-         *
-         * The part from that that I thought was relevant was the section describing how a no-op
-         * oplog entry is added to a donor shard *before the migration commit time* so that any
-         * existing change streams add their 'retryNeeded' entry and force a shard registry reload
-         * before reopening.
-         *
-         * Because the mechanism that forces the reload is only guaranteed to be before the
-         * migration commit time, we will not be able to guarantee writes from the migration itself.
-         *
-         * The commented out inserts below do happen on the new shard here, but are not seen by our
-         * change stream.
-         */
-        // makeEvent(16, "insert"),
-        // makeEvent(20, "insert"),
-        // makeEvent(21, "insert"),
-        // makeEvent(22, "insert"),
-        // makeEvent(23, "insert"),
-        // makeEvent(24, "insert"),
-        // makeEvent(25, "insert"),
-        makeEvent(16, "delete"),  // deletes related to chunk migration
-        makeEvent(20, "delete"),
-        makeEvent(21, "delete"),
-        makeEvent(22, "delete"),
-        makeEvent(23, "delete"),
-        makeEvent(24, "delete"),
-        makeEvent(25, "delete"),
-        makeEvent(-6, "insert"),
-        makeEvent(6, "insert"),
-        makeEvent(26, "insert"),
-    ];
 
     // Check that each change stream returns the expected events.
     checkEvents(changeStream, mongosEvents);
-    checkEvents(changeStreamMongosShowMigrations, mongosEventsWithMigrates);
     assert(!changeStreamShardZero.hasNext(), "Do not expect any results");
     checkEvents(changeStreamShardOne, shardOneEventsBeforeNewShard);
     assert.soon(() => changeStreamShardOne.hasNext());
@@ -370,7 +294,6 @@
 
     // Make sure all change streams are empty.
     assert(!changeStream.hasNext());
-    assert(!changeStreamMongosShowMigrations.hasNext());
     assert(!changeStreamShardZero.hasNext());
     assert(!changeStreamShardOne.hasNext());
     assert(!changeStreamNewShard.hasNext());
