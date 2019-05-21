@@ -61,7 +61,7 @@
 
     // Change streams opened on mongos do not allow showMigrationEvents to be set to true.
     assert.commandFailedWithCode(mongosDB.runCommand({
-        aggregate: 'test.foo',
+        aggregate: 'foo',
         pipeline: [{$changeStream: {showMigrationEvents: true}}],
         cursor: {},
     }),
