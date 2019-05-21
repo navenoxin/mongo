@@ -477,9 +477,7 @@ TEST_F(ChangeStreamStageTest, ShowMigrationsFailsOnMongos) {
     auto spec = fromjson("{$changeStream: {showMigrationEvents: true}}");
 
     ASSERT_THROWS_CODE(
-        DSChangeStream::createFromBson(spec.firstElement(), expCtx),
-        AssertionException,
-        31123);
+        DSChangeStream::createFromBson(spec.firstElement(), expCtx), AssertionException, 31123);
 }
 
 TEST_F(ChangeStreamStageTest, TransformInsertDocKeyXAndId) {
