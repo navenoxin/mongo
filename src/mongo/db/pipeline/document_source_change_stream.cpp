@@ -305,7 +305,7 @@ list<intrusive_ptr<DocumentSource>> buildPipeline(const intrusive_ptr<Expression
     bool ignoreFirstInvalidate = false;
     bool showMigrationEvents = spec.getShowMigrationEvents();
     uassert(31123,
-            "Change streams made against a mongos may not show migration events.",
+            "Change streams from mongos may not show migration events.",
             !(expCtx->inMongos && showMigrationEvents));
 
     auto resumeAfter = spec.getResumeAfter();
