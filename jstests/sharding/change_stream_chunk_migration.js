@@ -59,6 +59,14 @@
         {$changeStream: {showMigrationEvents: true}}
     ]);
 
+    // Change streams opened on mongos do not allow showMigrationEvents to be set to true.
+    assert.commandFailedWithCode(mongosDB.runCommand({
+        aggregate: 'test.foo',
+        pipeline: [{$changeStream: {showMigrationEvents: true}}],
+        cursor: {},
+    }),
+                                 31123);
+
     assert(!changeStream.hasNext(), "Do not expect any results yet");
     assert(!changeStreamShardZero.hasNext(), "Do not expect any results yet");
     assert(!changeStreamShardOne.hasNext(), "Do not expect any results yet");
@@ -90,10 +98,6 @@
     ];
     var shardOneEvents = [
         makeEvent(20, "insert"),
-    ];
-    var mongosEventsWithMigratesAfterNewShard = [
-        ...shardOneEvents,
-        ...shardZeroEventsAfterNewShard,
     ];
 
     // Check that each change stream returns the expected events.
