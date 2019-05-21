@@ -572,6 +572,29 @@ TEST_F(ChangeStreamStageTest, TransformInsertFromMigrateShowMigrations) {
     checkTransformation(insert, expectedInsert, {{"_id"}, {"x"}}, spec);
 }
 
+TEST_F(ChangeStreamStageTest, TransformInsertFromMigrateShowMigrations) {
+    bool fromMigrate = true;
+    expCtx()->fromMongos = true;
+    auto insert = makeOplogEntry(OpTypeEnum::kInsert,           // op type
+                                 nss,                           // namespace
+                                 BSON("x" << 2 << "_id" << 1),  // o
+                                 testUuid(),                    // uuid
+                                 fromMigrate,                   // fromMigrate
+                                 boost::none);                  // o2
+
+    auto spec = fromjson("{$changeStream: {showMigrationEvents: true}}");
+    Document expectedInsert{
+        {DSChangeStream::kIdField,
+         makeResumeToken(kDefaultTs, testUuid(), BSON("_id" << 1 << "x" << 2))},
+        {DSChangeStream::kOperationTypeField, DSChangeStream::kInsertOpType},
+        {DSChangeStream::kClusterTimeField, kDefaultTs},
+        {DSChangeStream::kFullDocumentField, D{{"x", 2}, {"_id", 1}}},
+        {DSChangeStream::kNamespaceField, D{{"db", nss.db()}, {"coll", nss.coll()}}},
+        {DSChangeStream::kDocumentKeyField, D{{"_id", 1}, {"x", 2}}},  // _id first
+    };
+    checkTransformation(insert, expectedInsert, {{"_id"}, {"x"}}, spec);
+}
+
 TEST_F(ChangeStreamStageTest, TransformUpdateFields) {
     BSONObj o = BSON("$set" << BSON("y" << 1));
     BSONObj o2 = BSON("_id" << 1 << "x" << 2);
