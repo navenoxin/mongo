@@ -6,6 +6,7 @@
 
     // For supportsMajorityReadConcern().
     load("jstests/multiVersion/libs/causal_consistency_helpers.js");
+    load("jstests/aggregation/extras/utils.js");  // For assertErrorCode
 
     function checkEvents(changeStream, expectedEvents) {
         expectedEvents.forEach((event) => {
@@ -60,12 +61,8 @@
     ]);
 
     // Change streams opened on mongos do not allow showMigrationEvents to be set to true.
-    assert.commandFailedWithCode(mongosDB.runCommand({
-        aggregate: 'foo',
-        pipeline: [{$changeStream: {showMigrationEvents: true}}],
-        cursor: {},
-    }),
-                                 31123);
+    assertErrorCode(mongosColl, [{$changeStream: {showMigrationEvents: true}}], 31123);
+
 
     assert(!changeStream.hasNext(), "Do not expect any results yet");
     assert(!changeStreamShardZero.hasNext(), "Do not expect any results yet");
